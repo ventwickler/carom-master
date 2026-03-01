@@ -1,6 +1,6 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import { MOCK_PLAYERS, MOCK_MATCHES } from "./src/mockData";
+import { dbService } from "./src/db/index";
 import { Player, Match, Tournament } from "./src/types";
 
 async function startServer() {
@@ -9,73 +9,55 @@ async function startServer() {
 
   app.use(express.json());
 
-  // In-memory data store (initialized with mock data)
-  let players: Player[] = [...MOCK_PLAYERS];
-  let matches: Match[] = [...MOCK_MATCHES];
-  let tournaments: Tournament[] = [
-    {
-      id: '1',
-      name: 'Seoul World Cup 2024',
-      location: 'Seoul, South Korea',
-      type: 'knockout',
-      startDate: '2024-05-01',
-      endDate: '2024-05-07',
-      players: MOCK_PLAYERS,
-      matches: MOCK_MATCHES,
-      targetPoints: 40,
-      inningsLimit: 0,
-    }
-  ];
-
   // API Routes
   app.get("/api/players", (req, res) => {
-    res.json(players);
+    res.json(dbService.getPlayers());
   });
 
   app.post("/api/players", (req, res) => {
     const newPlayer = req.body as Player;
-    players.push(newPlayer);
+    dbService.createPlayer(newPlayer);
     res.status(201).json(newPlayer);
   });
 
   app.put("/api/players/:id", (req, res) => {
     const { id } = req.params;
     const updatedPlayer = req.body as Player;
-    players = players.map(p => p.id === id ? updatedPlayer : p);
+    dbService.updatePlayer(id, updatedPlayer);
     res.json(updatedPlayer);
   });
 
   app.get("/api/matches", (req, res) => {
-    res.json(matches);
+    res.json(dbService.getMatches());
   });
 
   app.post("/api/matches", (req, res) => {
     const newMatch = req.body as Match;
-    matches.push(newMatch);
+    dbService.createMatch(newMatch);
     res.status(201).json(newMatch);
   });
 
   app.put("/api/matches/:id", (req, res) => {
     const { id } = req.params;
     const updatedMatch = req.body as Match;
-    matches = matches.map(m => m.id === id ? updatedMatch : m);
+    dbService.updateMatch(id, updatedMatch);
     res.json(updatedMatch);
   });
 
   app.get("/api/tournaments", (req, res) => {
-    res.json(tournaments);
+    res.json(dbService.getTournaments());
   });
 
   app.post("/api/tournaments", (req, res) => {
     const newTournament = req.body as Tournament;
-    tournaments.push(newTournament);
+    dbService.createTournament(newTournament);
     res.status(201).json(newTournament);
   });
 
   app.put("/api/tournaments/:id", (req, res) => {
     const { id } = req.params;
     const updatedTournament = req.body as Tournament;
-    tournaments = tournaments.map(t => t.id === id ? updatedTournament : t);
+    dbService.updateTournament(id, updatedTournament);
     res.json(updatedTournament);
   });
 
