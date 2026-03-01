@@ -3,11 +3,16 @@ import { MOCK_MATCHES, MOCK_PLAYERS } from '../mockData';
 import MatchDetailsModal from './MatchDetailsModal';
 import TournamentForm from './TournamentForm';
 import { Match, Tournament } from '../types';
-import { MapPin, Calendar, Trophy, Edit2 } from 'lucide-react';
+import { MapPin, Calendar, Trophy, Edit2, ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 export default function TournamentView() {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [activeRound, setActiveRound] = useState(0);
+  const [hoveredPlayerId, setHoveredPlayerId] = useState<string | null>(null);
+  
+  const rounds = ['Round of 16', 'Quarter Finals', 'Semi Finals', 'Grand Final'];
   const [currentTournament, setCurrentTournament] = useState<Tournament | null>({
     id: '1',
     name: 'Seoul World Cup 2024',
@@ -72,82 +77,156 @@ export default function TournamentView() {
         </button>
       </header>
 
-      <div className="flex gap-12 overflow-x-auto pb-8">
+      {/* Round Navigation (Mobile/Compact) */}
+      <div className="flex lg:hidden items-center justify-between bg-white border border-[#141414]/10 p-4 rounded-2xl">
+        <button 
+          onClick={() => setActiveRound(Math.max(0, activeRound - 1))}
+          disabled={activeRound === 0}
+          className="p-2 disabled:opacity-20"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <div className="text-center">
+          <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Current Round</p>
+          <p className="text-sm font-bold uppercase">{rounds[activeRound]}</p>
+        </div>
+        <button 
+          onClick={() => setActiveRound(Math.min(rounds.length - 1, activeRound + 1))}
+          disabled={activeRound === rounds.length - 1}
+          className="p-2 disabled:opacity-20"
+        >
+          <ChevronRight size={20} />
+        </button>
+      </div>
+
+      <div className="flex gap-12 overflow-x-auto pb-8 scrollbar-hide">
         {/* Round of 16 */}
-        <div className="space-y-8 min-w-[280px]">
+        <div className={cn(
+          "space-y-8 min-w-[280px] transition-all duration-300",
+          activeRound !== 0 && "hidden lg:block"
+        )}>
           <h3 className="text-[10px] uppercase tracking-[0.2em] font-bold opacity-30 border-b border-[#141414]/10 pb-2">Round of 16</h3>
           {completedMatches.slice(0, 4).map((match, i) => {
             const p1 = getPlayer(match.player1Id);
             const p2 = getPlayer(match.player2Id);
+            const isP1Winner = match.player1Score >= match.player2Score;
+            const isP2Winner = match.player2Score >= match.player1Score;
+
             return (
               <div 
                 key={match.id} 
                 onClick={() => setSelectedMatch(match)}
-                className="space-y-1 cursor-pointer group"
+                className="space-y-1 cursor-pointer group relative"
               >
-                <div className={match.player1Score >= match.player2Score ? "bg-white border border-[#141414] p-4 rounded-xl flex justify-between items-center group-hover:border-[#141414] transition-all" : "bg-white border border-[#141414] p-4 rounded-xl flex justify-between items-center opacity-40 group-hover:border-[#141414] transition-all"}>
+                <div 
+                  onMouseEnter={() => setHoveredPlayerId(p1?.id || null)}
+                  onMouseLeave={() => setHoveredPlayerId(null)}
+                  className={cn(
+                    "p-4 rounded-xl flex justify-between items-center transition-all border",
+                    isP1Winner ? "bg-white border-[#141414]" : "bg-white border-[#141414]/10 opacity-40",
+                    hoveredPlayerId === p1?.id && "ring-2 ring-emerald-500 border-emerald-500 opacity-100"
+                  )}
+                >
                   <span className="text-sm font-bold">{p1?.name.split(' ').pop()}</span>
                   <span className="font-mono text-sm font-bold">{match.player1Score}</span>
                 </div>
-                <div className={match.player2Score >= match.player1Score ? "bg-white border border-[#141414] p-4 rounded-xl flex justify-between items-center group-hover:border-[#141414] transition-all" : "bg-white border border-[#141414] p-4 rounded-xl flex justify-between items-center opacity-40 group-hover:border-[#141414] transition-all"}>
+                <div 
+                  onMouseEnter={() => setHoveredPlayerId(p2?.id || null)}
+                  onMouseLeave={() => setHoveredPlayerId(null)}
+                  className={cn(
+                    "p-4 rounded-xl flex justify-between items-center transition-all border",
+                    isP2Winner ? "bg-white border-[#141414]" : "bg-white border-[#141414]/10 opacity-40",
+                    hoveredPlayerId === p2?.id && "ring-2 ring-emerald-500 border-emerald-500 opacity-100"
+                  )}
+                >
                   <span className="text-sm font-bold">{p2?.name.split(' ').pop()}</span>
                   <span className="font-mono text-sm font-bold">{match.player2Score}</span>
                 </div>
+                
+                {/* Connector to next round */}
+                <div className="hidden lg:block absolute -right-6 top-1/2 w-6 h-px bg-[#141414]/20" />
               </div>
             );
           })}
         </div>
 
         {/* Quarter Finals */}
-        <div className="space-y-16 pt-12 min-w-[280px]">
+        <div className={cn(
+          "space-y-16 pt-12 min-w-[280px] transition-all duration-300",
+          activeRound !== 1 && "hidden lg:block"
+        )}>
           <h3 className="text-[10px] uppercase tracking-[0.2em] font-bold opacity-30 border-b border-[#141414]/10 pb-2">Quarter Finals</h3>
-          {[1, 2].map(i => (
-            <div key={i} className="space-y-1 relative">
-              {/* Connector lines (simplified) */}
-              <div className="absolute -left-6 top-1/2 w-6 h-px bg-[#141414]/20" />
+          {[
+            { p1: 'Jaspers', p2: 'Zanetti', s1: 40, s2: 38, status: 'completed' },
+            { p1: 'Cho', p2: 'TBD', s1: 12, s2: 8, status: 'live' }
+          ].map((m, i) => (
+            <div key={i} className="space-y-1 relative group cursor-pointer">
+              {/* Connector lines */}
+              <div className="hidden lg:block absolute -left-6 top-1/2 w-6 h-px bg-[#141414]/20" />
               
-              <div className="bg-white border border-[#141414] p-4 rounded-xl flex justify-between items-center">
-                <span className="text-sm font-bold">Jaspers</span>
-                <span className="font-mono text-sm font-bold">-</span>
+              <div className={cn(
+                "bg-white border p-4 rounded-xl flex justify-between items-center transition-all",
+                m.status === 'live' ? "border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.1)]" : "border-[#141414]"
+              )}>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold">{m.p1}</span>
+                  {m.status === 'live' && <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
+                </div>
+                <span className="font-mono text-sm font-bold">{m.s1}</span>
               </div>
-              <div className="bg-white border border-[#141414] p-4 rounded-xl flex justify-between items-center">
-                <span className="text-sm font-bold">Zanetti</span>
-                <span className="font-mono text-sm font-bold">-</span>
+              <div className="bg-white border border-[#141414]/10 p-4 rounded-xl flex justify-between items-center opacity-40 group-hover:opacity-100 transition-all">
+                <span className="text-sm font-bold">{m.p2}</span>
+                <span className="font-mono text-sm font-bold">{m.s2}</span>
               </div>
+
+              {/* Connector to next round */}
+              <div className="hidden lg:block absolute -right-6 top-1/2 w-6 h-px bg-[#141414]/20" />
             </div>
           ))}
         </div>
 
         {/* Semi Finals */}
-        <div className="space-y-32 pt-24 min-w-[280px]">
+        <div className={cn(
+          "space-y-32 pt-24 min-w-[280px] transition-all duration-300",
+          activeRound !== 2 && "hidden lg:block"
+        )}>
           <h3 className="text-[10px] uppercase tracking-[0.2em] font-bold opacity-30 border-b border-[#141414]/10 pb-2">Semi Finals</h3>
-          <div className="space-y-1 relative">
-            <div className="absolute -left-6 top-1/2 w-6 h-px bg-[#141414]/20" />
-            <div className="bg-white border border-[#141414] p-4 rounded-xl flex justify-between items-center">
+          <div className="space-y-1 relative group cursor-pointer">
+            <div className="hidden lg:block absolute -left-6 top-1/2 w-6 h-px bg-[#141414]/20" />
+            <div className="bg-white border border-[#141414]/10 p-4 rounded-xl flex justify-between items-center opacity-40 group-hover:opacity-100 transition-all">
               <span className="text-sm font-bold">TBD</span>
               <span className="font-mono text-sm font-bold">-</span>
             </div>
-            <div className="bg-white border border-[#141414] p-4 rounded-xl flex justify-between items-center">
+            <div className="bg-white border border-[#141414]/10 p-4 rounded-xl flex justify-between items-center opacity-40 group-hover:opacity-100 transition-all">
               <span className="text-sm font-bold">TBD</span>
               <span className="font-mono text-sm font-bold">-</span>
             </div>
+            {/* Connector to next round */}
+            <div className="hidden lg:block absolute -right-6 top-1/2 w-6 h-px bg-[#141414]/20" />
           </div>
         </div>
 
         {/* Final */}
-        <div className="space-y-64 pt-48 min-w-[280px]">
+        <div className={cn(
+          "space-y-64 pt-48 min-w-[280px] transition-all duration-300",
+          activeRound !== 3 && "hidden lg:block"
+        )}>
           <h3 className="text-[10px] uppercase tracking-[0.2em] font-bold opacity-30 border-b border-[#141414]/10 pb-2">Grand Final</h3>
-          <div className="bg-[#141414] text-white border border-[#141414] p-6 rounded-2xl flex justify-between items-center shadow-2xl scale-110">
+          <div className="bg-[#141414] text-white border border-[#141414] p-6 rounded-2xl flex justify-between items-center shadow-2xl scale-110 relative group cursor-pointer">
+            <div className="hidden lg:block absolute -left-6 top-1/2 w-6 h-px bg-white/20" />
             <div className="space-y-4 w-full">
               <div className="flex justify-between items-center">
-                <span className="text-lg font-bold italic font-serif">CHAMPIONSHIP MATCH</span>
+                <span className="text-lg font-bold italic font-serif flex items-center gap-2">
+                  <Trophy size={18} className="text-amber-400" />
+                  CHAMPIONSHIP
+                </span>
               </div>
               <div className="space-y-2">
-                <div className="flex justify-between items-center opacity-40">
+                <div className="flex justify-between items-center opacity-40 group-hover:opacity-100 transition-all">
                   <span className="text-sm font-bold">FINALIST A</span>
                   <span className="font-mono text-sm font-bold">0</span>
                 </div>
-                <div className="flex justify-between items-center opacity-40">
+                <div className="flex justify-between items-center opacity-40 group-hover:opacity-100 transition-all">
                   <span className="text-sm font-bold">FINALIST B</span>
                   <span className="font-mono text-sm font-bold">0</span>
                 </div>
