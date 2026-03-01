@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Match, Player } from '../types';
 import { cn } from '../lib/utils';
 import { Timer, Hash, TrendingUp, User, Activity } from 'lucide-react';
@@ -10,65 +10,10 @@ interface ScoreboardProps {
   player2: Player;
 }
 
-export default function Scoreboard({ match: initialMatch, player1, player2 }: ScoreboardProps) {
-  const [match, setMatch] = useState<Match>(initialMatch);
+export default function Scoreboard({ match, player1, player2 }: ScoreboardProps) {
   const [currentRun, setCurrentRun] = useState(0);
   const [activePlayer, setActivePlayer] = useState<1 | 2>(1);
   const [timeLeft, setTimeLeft] = useState(40); // 40 seconds per shot
-
-  // Simulate real-time updates for live matches
-  useEffect(() => {
-    if (match.status !== 'live') return;
-
-    const interval = setInterval(() => {
-      // 30% chance to score a point every 3 seconds
-      if (Math.random() > 0.7) {
-        setMatch(prev => {
-          const isPlayer1 = activePlayer === 1;
-          const newScore1 = isPlayer1 ? prev.player1Score + 1 : prev.player1Score;
-          const newScore2 = !isPlayer1 ? prev.player2Score + 1 : prev.player2Score;
-          
-          const newHighRun1 = isPlayer1 ? Math.max(prev.highRun1, currentRun + 1) : prev.highRun1;
-          const newHighRun2 = !isPlayer1 ? Math.max(prev.highRun2, currentRun + 1) : prev.highRun2;
-
-          setCurrentRun(curr => curr + 1);
-          
-          return {
-            ...prev,
-            player1Score: newScore1,
-            player2Score: newScore2,
-            highRun1: newHighRun1,
-            highRun2: newHighRun2,
-          };
-        });
-        setTimeLeft(40); // Reset shot clock on score
-      } else if (Math.random() > 0.9) {
-        // 10% chance to miss/switch player
-        setActivePlayer(curr => curr === 1 ? 2 : 1);
-        setCurrentRun(0);
-        setMatch(prev => ({ ...prev, innings: prev.innings + (activePlayer === 2 ? 1 : 0) }));
-        setTimeLeft(40);
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [match.status, activePlayer, currentRun]);
-
-  // Shot clock countdown
-  useEffect(() => {
-    if (match.status !== 'live') return;
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 0) {
-          setActivePlayer(curr => curr === 1 ? 2 : 1);
-          setCurrentRun(0);
-          return 40;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [match.status]);
 
   const avg1 = match.innings > 0 ? (match.player1Score / match.innings).toFixed(3) : '0.000';
   const avg2 = match.innings > 0 ? (match.player2Score / match.innings).toFixed(3) : '0.000';
