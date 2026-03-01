@@ -1,0 +1,186 @@
+openapi: 3.0.0
+info:
+  title: Billiards Tournament API
+  version: 1.0.0
+  description: API for managing billiards tournaments, players, and matches.
+paths:
+  /api/players:
+    get:
+      summary: Get all players
+      responses:
+        '200':
+          description: A list of players
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Player'
+    post:
+      summary: Create a new player
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Player'
+      responses:
+        '201':
+          description: Player created
+  /api/players/{id}:
+    put:
+      summary: Update a player
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Player'
+      responses:
+        '200':
+          description: Player updated
+  /api/matches:
+    get:
+      summary: Get all matches
+      responses:
+        '200':
+          description: A list of matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Match'
+    post:
+      summary: Record a new match
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Match'
+      responses:
+        '201':
+          description: Match recorded
+  /api/matches/{id}:
+    put:
+      summary: Update a match
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Match'
+      responses:
+        '200':
+          description: Match updated
+  /api/tournaments:
+    get:
+      summary: Get all tournaments
+      responses:
+        '200':
+          description: A list of tournaments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tournament'
+    post:
+      summary: Create a new tournament
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tournament'
+      responses:
+        '201':
+          description: Tournament created
+
+components:
+  schemas:
+    Player:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        country:
+          type: string
+        ranking:
+          type: integer
+        avatar:
+          type: string
+    Match:
+      type: object
+      properties:
+        id:
+          type: string
+        player1Id:
+          type: string
+        player2Id:
+          type: string
+        player1Score:
+          type: integer
+        player2Score:
+          type: integer
+        innings:
+          type: integer
+        status:
+          type: string
+          enum: [upcoming, live, completed]
+        startTime:
+          type: string
+          format: date-time
+        tableNumber:
+          type: integer
+        targetPoints:
+          type: integer
+        highRun1:
+          type: integer
+        highRun2:
+          type: integer
+    Tournament:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        location:
+          type: string
+        type:
+          type: string
+          enum: [knockout, round-robin, groups]
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/Player'
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/Match'
+        targetPoints:
+          type: integer
+        inningsLimit:
+          type: integer

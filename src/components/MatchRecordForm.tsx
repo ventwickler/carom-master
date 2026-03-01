@@ -4,46 +4,52 @@ import { motion } from 'motion/react';
 import { Player, Match } from '../types';
 
 interface MatchRecordFormProps {
-  player: Player;
+  player?: Player;
+  match?: Match;
   allPlayers: Player[];
   onClose: () => void;
   onSubmit: (match: Match) => void;
 }
 
-export default function MatchRecordForm({ player, allPlayers, onClose, onSubmit }: MatchRecordFormProps) {
+export default function MatchRecordForm({ player: initialPlayer, match, allPlayers, onClose, onSubmit }: MatchRecordFormProps) {
+  const player = initialPlayer || (match ? allPlayers.find(p => p.id === match.player1Id) : undefined);
+  
+  if (!player) return null;
+
   const opponents = allPlayers.filter(p => p.id !== player.id);
   
   const [formData, setFormData] = useState({
-    opponentId: '',
-    playerScore: 0,
-    opponentScore: 0,
-    innings: 0,
-    highRun: 0,
-    opponentHighRun: 0,
-    targetPoints: 40,
-    tableNumber: 1,
+    opponentId: match?.player2Id || '',
+    playerScore: match?.player1Score || 0,
+    opponentScore: match?.player2Score || 0,
+    innings: match?.innings || 0,
+    highRun: match?.highRun1 || 0,
+    opponentHighRun: match?.highRun2 || 0,
+    targetPoints: match?.targetPoints || 40,
+    tableNumber: match?.tableNumber || 1,
+    status: match?.status || 'completed' as Match['status'],
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.opponentId) return;
 
-    const newMatch: Match = {
-      id: Math.random().toString(36).substr(2, 9),
+    const updatedMatch: Match = {
+      id: match?.id || Math.random().toString(36).substr(2, 9),
       player1Id: player.id,
       player2Id: formData.opponentId,
       player1Score: formData.playerScore,
       player2Score: formData.opponentScore,
       innings: formData.innings,
-      status: 'completed',
-      startTime: new Date().toISOString(),
+      status: formData.status,
+      startTime: match?.startTime || new Date().toISOString(),
       tableNumber: formData.tableNumber,
       targetPoints: formData.targetPoints,
       highRun1: formData.highRun,
       highRun2: formData.opponentHighRun,
     };
 
-    onSubmit(newMatch);
+    onSubmit(updatedMatch);
   };
 
   return (
@@ -55,8 +61,12 @@ export default function MatchRecordForm({ player, allPlayers, onClose, onSubmit 
       >
         <div className="bg-[#141414] p-6 text-white flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold tracking-tighter uppercase italic font-serif">Record Match Result</h2>
-            <p className="text-[10px] uppercase tracking-widest opacity-40 mt-1">Submit official score for {player.name}</p>
+            <h2 className="text-2xl font-bold tracking-tighter uppercase italic font-serif">
+              {match ? 'Edit Match Result' : 'Record Match Result'}
+            </h2>
+            <p className="text-[10px] uppercase tracking-widest opacity-40 mt-1">
+              {match ? `Update official score for match ${match.id}` : `Submit official score for ${player.name}`}
+            </p>
           </div>
           <button 
             onClick={onClose}
@@ -172,6 +182,19 @@ export default function MatchRecordForm({ player, allPlayers, onClose, onSubmit 
                 value={formData.tableNumber}
                 onChange={(e) => setFormData({ ...formData, tableNumber: parseInt(e.target.value) || 1 })}
               />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-widest font-bold opacity-50">Status</label>
+              <select
+                required
+                className="w-full bg-white border border-[#141414]/10 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-[#141414] outline-none transition-all appearance-none font-bold"
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as Match['status'] })}
+              >
+                <option value="upcoming">Upcoming</option>
+                <option value="live">Live</option>
+                <option value="completed">Completed</option>
+              </select>
             </div>
           </div>
 

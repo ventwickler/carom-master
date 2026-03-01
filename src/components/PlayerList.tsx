@@ -1,20 +1,39 @@
-import React, { useState } from 'react';
-import { MOCK_PLAYERS } from '../mockData';
+import React, { useState, useEffect } from 'react';
 import { Trophy, Award, Target, Globe, Plus, Edit2, Search, ArrowUpDown, BarChart3, ClipboardList, Activity, Clock, CheckCircle2, Download } from 'lucide-react';
 import PlayerForm from './PlayerForm';
 import PlayerStatsModal from './PlayerStatsModal';
 import MatchRecordForm from './MatchRecordForm';
 import { Player, Match } from '../types';
-import { MOCK_MATCHES } from '../mockData';
 import { cn } from '../lib/utils';
+import { apiService } from '../services/apiService';
 
 export default function PlayerList() {
-  const [players, setPlayers] = useState<Player[]>(MOCK_PLAYERS);
-  const [matches, setMatches] = useState<Match[]>(MOCK_MATCHES);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [playersData, matchesData] = await Promise.all([
+          apiService.getPlayers(),
+          apiService.getMatches()
+        ]);
+        setPlayers(playersData);
+        setMatches(matchesData);
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | undefined>(undefined);
   const [statsPlayer, setStatsPlayer] = useState<Player | undefined>(undefined);
   const [recordingPlayer, setRecordingPlayer] = useState<Player | undefined>(undefined);
+  const [editingMatch, setEditingMatch] = useState<Match | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<'name' | 'ranking'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -53,27 +72,41 @@ export default function PlayerList() {
     setIsFormOpen(true);
   };
 
-  const handleFormSubmit = (data: Partial<Player>) => {
-    if (editingPlayer) {
-      // Update existing player
-      setPlayers(players.map(p => p.id === editingPlayer.id ? { ...p, ...data } as Player : p));
-    } else {
-      // Create new player
-      const newPlayer: Player = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: data.name || 'Unknown',
-        country: data.country || 'Unknown',
-        ranking: data.ranking,
-      };
-      setPlayers([...players, newPlayer]);
+  const handleFormSubmit = async (data: Partial<Player>) => {
+    try {
+      if (editingPlayer) {
+        const updated = await apiService.updatePlayer({ ...editingPlayer, ...data } as Player);
+        setPlayers(players.map(p => p.id === editingPlayer.id ? updated : p));
+      } else {
+        const newPlayer: Player = {
+          id: Math.random().toString(36).substr(2, 9),
+          name: data.name || 'Unknown',
+          country: data.country || 'Unknown',
+          ranking: data.ranking,
+        };
+        const created = await apiService.createPlayer(newPlayer);
+        setPlayers([...players, created]);
+      }
+      setIsFormOpen(false);
+    } catch (error) {
+      console.error('Failed to save player:', error);
     }
-    setIsFormOpen(false);
   };
 
-  const handleMatchSubmit = (match: Match) => {
-    setMatches([...matches, match]);
-    setRecordingPlayer(undefined);
-    // In a real app, we might recalculate player stats here
+  const handleMatchSubmit = async (match: Match) => {
+    try {
+      if (editingMatch) {
+        const updated = await apiService.updateMatch(match);
+        setMatches(matches.map(m => m.id === match.id ? updated : m));
+        setEditingMatch(undefined);
+      } else {
+        const created = await apiService.recordMatch(match);
+        setMatches([...matches, created]);
+        setRecordingPlayer(undefined);
+      }
+    } catch (error) {
+      console.error('Failed to save match:', error);
+    }
   };
 
   const exportToCSV = (type: 'players' | 'matches') => {
@@ -111,6 +144,17 @@ export default function PlayerList() {
     link.click();
     document.body.removeChild(link);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#E4E3E0]">
+        <div className="flex flex-col items-center gap-4">
+          <Activity className="animate-pulse text-[#141414]" size={48} />
+          <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Loading Participants...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 space-y-8 bg-[#E4E3E0] min-h-screen text-[#141414]">
@@ -232,6 +276,13 @@ export default function PlayerList() {
               </div>
               
               <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setEditingMatch(match)}
+                  className="p-2 rounded-lg bg-[#141414]/5 hover:bg-[#141414]/10 transition-colors"
+                  title="Edit Match"
+                >
+                  <Edit2 size={14} className="opacity-40" />
+                </button>
                 <div className="text-right">
                   <p className="text-[10px] uppercase tracking-widest opacity-40 font-bold">Table</p>
                   <p className="font-mono font-bold text-xs">{match.tableNumber}</p>
@@ -334,6 +385,15 @@ export default function PlayerList() {
           player={recordingPlayer}
           allPlayers={players}
           onClose={() => setRecordingPlayer(undefined)}
+          onSubmit={handleMatchSubmit}
+        />
+      )}
+
+      {editingMatch && (
+        <MatchRecordForm
+          match={editingMatch}
+          allPlayers={players}
+          onClose={() => setEditingMatch(undefined)}
           onSubmit={handleMatchSubmit}
         />
       )}

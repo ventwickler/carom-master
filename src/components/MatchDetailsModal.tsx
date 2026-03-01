@@ -9,9 +9,10 @@ interface MatchDetailsModalProps {
   player1: Player;
   player2: Player;
   onClose: () => void;
+  onEdit?: (match: Match) => void;
 }
 
-export default function MatchDetailsModal({ match, player1, player2, onClose }: MatchDetailsModalProps) {
+export default function MatchDetailsModal({ match, player1, player2, onClose, onEdit }: MatchDetailsModalProps) {
   // Mock score progression data
   const scoreProgression = Array.from({ length: match.innings }, (_, i) => ({
     inning: i + 1,
@@ -199,7 +200,15 @@ export default function MatchDetailsModal({ match, player1, player2, onClose }: 
           </div>
         </div>
 
-        <div className="p-8 bg-[#141414]/5 flex justify-end">
+        <div className="p-8 bg-[#141414]/5 flex justify-end gap-3">
+          {onEdit && (
+            <button
+              onClick={() => onEdit(match)}
+              className="px-8 py-3 rounded-xl border border-[#141414] text-[#141414] font-bold uppercase tracking-widest text-xs hover:bg-[#141414] hover:text-white transition-all shadow-sm"
+            >
+              Edit Match
+            </button>
+          )}
           <button
             onClick={onClose}
             className="px-8 py-3 rounded-xl bg-[#141414] text-white font-bold uppercase tracking-widest text-xs hover:bg-[#2A2A2A] transition-all shadow-lg"
