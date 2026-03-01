@@ -72,6 +72,13 @@ async function startServer() {
     res.status(201).json(newTournament);
   });
 
+  app.put("/api/tournaments/:id", (req, res) => {
+    const { id } = req.params;
+    const updatedTournament = req.body as Tournament;
+    tournaments = tournaments.map(t => t.id === id ? updatedTournament : t);
+    res.json(updatedTournament);
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

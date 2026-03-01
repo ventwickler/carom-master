@@ -62,4 +62,13 @@ export const apiService = {
     });
     return res.json();
   },
+
+  async updateTournament(tournament: Tournament): Promise<Tournament> {
+    const res = await fetch(`${API_BASE}/tournaments/${tournament.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(tournament),
+    });
+    return res.json();
+  },
 };

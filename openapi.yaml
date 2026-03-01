@@ -109,6 +109,24 @@ paths:
       responses:
         '201':
           description: Tournament created
+  /api/tournaments/{id}:
+    put:
+      summary: Update a tournament
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tournament'
+      responses:
+        '200':
+          description: Tournament updated
 
 components:
   schemas:

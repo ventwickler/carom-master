@@ -42,13 +42,18 @@ export default function TournamentView() {
   const getPlayer = (id: string) => allPlayers.find(p => p.id === id);
   const completedMatches = currentTournament?.matches.filter(m => m.status === 'completed') || [];
 
-  const handleCreateTournament = async (data: Partial<Tournament>) => {
+  const handleTournamentSubmit = async (data: Partial<Tournament>) => {
     try {
-      const created = await apiService.createTournament(data as Tournament);
-      setCurrentTournament(created);
+      if (currentTournament && data.id === currentTournament.id) {
+        const updated = await apiService.updateTournament(data as Tournament);
+        setCurrentTournament(updated);
+      } else {
+        const created = await apiService.createTournament(data as Tournament);
+        setCurrentTournament(created);
+      }
       setIsFormOpen(false);
     } catch (error) {
-      console.error('Failed to create tournament:', error);
+      console.error('Failed to save tournament:', error);
     }
   };
 
@@ -320,7 +325,7 @@ export default function TournamentView() {
           tournament={currentTournament}
           availablePlayers={allPlayers}
           onClose={() => setIsFormOpen(false)}
-          onSubmit={handleCreateTournament}
+          onSubmit={handleTournamentSubmit}
         />
       )}
     </div>
