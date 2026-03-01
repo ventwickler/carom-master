@@ -19,10 +19,10 @@ export default function TournamentForm({ tournament, availablePlayers, onClose, 
     endDate: tournament?.endDate || new Date().toISOString().split('T')[0],
     targetPoints: tournament?.targetPoints || 40,
     inningsLimit: tournament?.inningsLimit || 0,
-    selectedPlayerIds: tournament?.players.map(p => p.id) || [] as string[],
+    selectedPlayerIds: tournament?.players.map(p => p.id) || [] as number[],
   });
 
-  const togglePlayer = (id: string) => {
+  const togglePlayer = (id: number) => {
     setFormData(prev => ({
       ...prev,
       selectedPlayerIds: prev.selectedPlayerIds.includes(id)
@@ -37,7 +37,7 @@ export default function TournamentForm({ tournament, availablePlayers, onClose, 
     
     onSubmit({
       ...formData,
-      id: tournament?.id || Math.random().toString(36).substr(2, 9),
+      id: tournament?.id as number,
       players: selectedPlayers,
       matches: tournament?.matches || [],
     });

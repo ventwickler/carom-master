@@ -13,7 +13,7 @@ export default function TournamentView() {
   const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [activeRound, setActiveRound] = useState(0);
-  const [hoveredPlayerId, setHoveredPlayerId] = useState<string | null>(null);
+  const [hoveredPlayerId, setHoveredPlayerId] = useState<number | null>(null);
   const [currentTournament, setCurrentTournament] = useState<Tournament | null>(null);
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,7 +40,7 @@ export default function TournamentView() {
 
   const rounds = ['Round of 16', 'Quarter Finals', 'Semi Finals', 'Grand Final'];
 
-  const getPlayer = (id: string) => allPlayers.find(p => p.id === id);
+  const getPlayer = (id: number) => allPlayers.find(p => p.id === id);
   const completedMatches = currentTournament?.matches.filter(m => m.status === 'completed') || [];
 
   const handleTournamentSubmit = async (data: Partial<Tournament>) => {

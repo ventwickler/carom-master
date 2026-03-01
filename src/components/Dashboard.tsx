@@ -11,7 +11,7 @@ export default function Dashboard() {
   const upcomingMatches = MOCK_MATCHES.filter(m => m.status === 'upcoming');
   const completedMatches = MOCK_MATCHES.filter(m => m.status === 'completed');
 
-  const getPlayer = (id: string) => MOCK_PLAYERS.find(p => p.id === id);
+  const getPlayer = (id: number) => MOCK_PLAYERS.find(p => p.id === id);
 
   return (
     <div className="p-8 space-y-8 bg-[#E4E3E0] min-h-screen text-[#141414]">

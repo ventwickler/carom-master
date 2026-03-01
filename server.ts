@@ -21,7 +21,7 @@ async function startServer() {
   });
 
   app.put("/api/players/:id", (req, res) => {
-    const { id } = req.params;
+    const id = Number(req.params.id);
     const updatedPlayer = req.body as Player;
     dbService.updatePlayer(id, updatedPlayer);
     res.json(updatedPlayer);
@@ -38,7 +38,7 @@ async function startServer() {
   });
 
   app.put("/api/matches/:id", (req, res) => {
-    const { id } = req.params;
+    const id = Number(req.params.id);
     const updatedMatch = req.body as Match;
     dbService.updateMatch(id, updatedMatch);
     res.json(updatedMatch);
@@ -55,7 +55,7 @@ async function startServer() {
   });
 
   app.put("/api/tournaments/:id", (req, res) => {
-    const { id } = req.params;
+    const id = Number(req.params.id);
     const updatedTournament = req.body as Tournament;
     dbService.updateTournament(id, updatedTournament);
     res.json(updatedTournament);

@@ -8,7 +8,7 @@ const db = new Database('carom.db');
 // Initialize tables
 db.exec(`
   CREATE TABLE IF NOT EXISTS players (
-    id TEXT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     country TEXT NOT NULL,
     ranking INTEGER,
@@ -16,7 +16,7 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS tournaments (
-    id TEXT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     location TEXT NOT NULL,
     type TEXT NOT NULL,
@@ -27,10 +27,10 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS matches (
-    id TEXT PRIMARY KEY,
-    tournamentId TEXT,
-    player1Id TEXT NOT NULL,
-    player2Id TEXT NOT NULL,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tournamentId INTEGER,
+    player1Id INTEGER NOT NULL,
+    player2Id INTEGER NOT NULL,
     player1Score INTEGER DEFAULT 0,
     player2Score INTEGER DEFAULT 0,
     innings INTEGER DEFAULT 0,
@@ -46,8 +46,8 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS tournament_players (
-    tournamentId TEXT,
-    playerId TEXT,
+    tournamentId INTEGER,
+    playerId INTEGER,
     PRIMARY KEY (tournamentId, playerId),
     FOREIGN KEY (tournamentId) REFERENCES tournaments(id),
     FOREIGN KEY (playerId) REFERENCES players(id)
@@ -67,7 +67,7 @@ if (playerCount.count === 0) {
       insertPlayer.run(player.id, player.name, player.country, player.ranking || null, player.avatar || null);
     }
 
-    const tournamentId = '1';
+    const tournamentId = 1;
     insertTournament.run(
       tournamentId,
       'Seoul World Cup 2024',
@@ -109,11 +109,11 @@ export const dbService = {
     return db.prepare('SELECT * FROM players').all() as Player[];
   },
   createPlayer: (player: Player) => {
-    db.prepare('INSERT INTO players (id, name, country, ranking, avatar) VALUES (?, ?, ?, ?, ?)')
-      .run(player.id, player.name, player.country, player.ranking || null, player.avatar || null);
-    return player;
+    const info = db.prepare('INSERT INTO players (name, country, ranking, avatar) VALUES (?, ?, ?, ?)')
+      .run(player.name, player.country, player.ranking || null, player.avatar || null);
+    return { ...player, id: info.lastInsertRowid as number };
   },
-  updatePlayer: (id: string, player: Player) => {
+  updatePlayer: (id: number, player: Player) => {
     db.prepare('UPDATE players SET name = ?, country = ?, ranking = ?, avatar = ? WHERE id = ?')
       .run(player.name, player.country, player.ranking || null, player.avatar || null, id);
     return player;
@@ -124,11 +124,11 @@ export const dbService = {
     return db.prepare('SELECT * FROM matches').all() as Match[];
   },
   createMatch: (match: Match) => {
-    db.prepare('INSERT INTO matches (id, player1Id, player2Id, player1Score, player2Score, innings, status, startTime, tableNumber, targetPoints, highRun1, highRun2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .run(match.id, match.player1Id, match.player2Id, match.player1Score, match.player2Score, match.innings, match.status, match.startTime, match.tableNumber, match.targetPoints, match.highRun1, match.highRun2);
-    return match;
+    const info = db.prepare('INSERT INTO matches (player1Id, player2Id, player1Score, player2Score, innings, status, startTime, tableNumber, targetPoints, highRun1, highRun2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(match.player1Id, match.player2Id, match.player1Score, match.player2Score, match.innings, match.status, match.startTime, match.tableNumber, match.targetPoints, match.highRun1, match.highRun2);
+    return { ...match, id: info.lastInsertRowid as number };
   },
-  updateMatch: (id: string, match: Match) => {
+  updateMatch: (id: number, match: Match) => {
     db.prepare('UPDATE matches SET player1Score = ?, player2Score = ?, innings = ?, status = ?, highRun1 = ?, highRun2 = ? WHERE id = ?')
       .run(match.player1Score, match.player2Score, match.innings, match.status, match.highRun1, match.highRun2, id);
     return match;
@@ -150,28 +150,29 @@ export const dbService = {
     });
   },
   createTournament: (tournament: Tournament) => {
-    db.prepare('INSERT INTO tournaments (id, name, location, type, startDate, endDate, targetPoints, inningsLimit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-      .run(tournament.id, tournament.name, tournament.location, tournament.type, tournament.startDate, tournament.endDate, tournament.targetPoints || null, tournament.inningsLimit || null);
+    const info = db.prepare('INSERT INTO tournaments (name, location, type, startDate, endDate, targetPoints, inningsLimit) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .run(tournament.name, tournament.location, tournament.type, tournament.startDate, tournament.endDate, tournament.targetPoints || null, tournament.inningsLimit || null);
     
+    const tournamentId = info.lastInsertRowid as number;
     const insertTP = db.prepare('INSERT INTO tournament_players (tournamentId, playerId) VALUES (?, ?)');
     const insertTM = db.prepare('UPDATE matches SET tournamentId = ? WHERE id = ?');
 
     db.transaction(() => {
       if (tournament.players) {
         for (const p of tournament.players) {
-          insertTP.run(tournament.id, p.id);
+          insertTP.run(tournamentId, p.id);
         }
       }
       if (tournament.matches) {
         for (const m of tournament.matches) {
-          insertTM.run(tournament.id, m.id);
+          insertTM.run(tournamentId, m.id);
         }
       }
     })();
 
-    return tournament;
+    return { ...tournament, id: tournamentId };
   },
-  updateTournament: (id: string, tournament: Tournament) => {
+  updateTournament: (id: number, tournament: Tournament) => {
     db.prepare('UPDATE tournaments SET name = ?, location = ?, type = ?, startDate = ?, endDate = ?, targetPoints = ?, inningsLimit = ? WHERE id = ?')
       .run(tournament.name, tournament.location, tournament.type, tournament.startDate, tournament.endDate, tournament.targetPoints || null, tournament.inningsLimit || null, id);
     

@@ -60,7 +60,7 @@ export default function PlayerList() {
   const avgScore = totalMatches > 0 ? (totalPoints / (totalMatches * 2)).toFixed(1) : '0';
   const tournamentsCount = 12; // Mock value for tournaments organized
 
-  const getPlayerName = (id: string) => players.find(p => p.id === id)?.name || 'Unknown';
+  const getPlayerName = (id: number) => players.find(p => p.id === id)?.name || 'Unknown';
 
   const handleAddPlayer = () => {
     setEditingPlayer(undefined);
@@ -79,7 +79,7 @@ export default function PlayerList() {
         setPlayers(players.map(p => p.id === editingPlayer.id ? updated : p));
       } else {
         const newPlayer: Player = {
-          id: Math.random().toString(36).substr(2, 9),
+          id: 0,
           name: data.name || 'Unknown',
           country: data.country || 'Unknown',
           ranking: data.ranking,

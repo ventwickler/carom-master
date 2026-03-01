@@ -1,5 +1,5 @@
 export type Player = {
-  id: string;
+  id: number;
   name: string;
   country: string;
   ranking?: number;
@@ -9,9 +9,9 @@ export type Player = {
 export type MatchStatus = 'upcoming' | 'live' | 'completed';
 
 export type Match = {
-  id: string;
-  player1Id: string;
-  player2Id: string;
+  id: number;
+  player1Id: number;
+  player2Id: number;
   player1Score: number;
   player2Score: number;
   innings: number;
@@ -24,7 +24,7 @@ export type Match = {
 };
 
 export type Tournament = {
-  id: string;
+  id: number;
   name: string;
   location: string;
   type: 'knockout' | 'round-robin' | 'groups';

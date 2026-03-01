@@ -35,9 +35,9 @@ export default function MatchRecordForm({ player: initialPlayer, match, allPlaye
     if (!formData.opponentId) return;
 
     const updatedMatch: Match = {
-      id: match?.id || Math.random().toString(36).substr(2, 9),
+      id: match?.id || 0,
       player1Id: player.id,
-      player2Id: formData.opponentId,
+      player2Id: Number(formData.opponentId),
       player1Score: formData.playerScore,
       player2Score: formData.opponentScore,
       innings: formData.innings,
