@@ -32,4 +32,6 @@ export type Tournament = {
   endDate: string;
   players: Player[];
   matches: Match[];
+  targetPoints?: number;
+  inningsLimit?: number;
 };

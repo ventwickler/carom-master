@@ -3,7 +3,7 @@ import { MOCK_MATCHES, MOCK_PLAYERS } from '../mockData';
 import MatchDetailsModal from './MatchDetailsModal';
 import TournamentForm from './TournamentForm';
 import { Match, Tournament } from '../types';
-import { MapPin, Calendar, Trophy } from 'lucide-react';
+import { MapPin, Calendar, Trophy, Edit2 } from 'lucide-react';
 
 export default function TournamentView() {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
@@ -27,14 +27,27 @@ export default function TournamentView() {
     setIsFormOpen(false);
   };
 
+  const handleEditTournament = () => {
+    setIsFormOpen(true);
+  };
+
   // Simplified bracket view
   return (
     <div className="p-8 space-y-8 bg-[#E4E3E0] min-h-screen text-[#141414]">
       <header className="flex justify-between items-end">
         <div>
-          <h2 className="text-4xl font-bold tracking-tighter uppercase italic font-serif">
-            {currentTournament?.name || 'Tournament Bracket'}
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-4xl font-bold tracking-tighter uppercase italic font-serif">
+              {currentTournament?.name || 'Tournament Bracket'}
+            </h2>
+            <button 
+              onClick={handleEditTournament}
+              className="p-2 rounded-lg bg-[#141414]/5 hover:bg-[#141414]/10 transition-colors"
+              title="Edit Tournament"
+            >
+              <Edit2 size={16} className="opacity-40" />
+            </button>
+          </div>
           <div className="flex items-center gap-4 mt-1">
             <p className="text-xs tracking-widest opacity-50 uppercase">
               {currentTournament?.type.replace('-', ' ')} Phase • Final 16
@@ -155,6 +168,8 @@ export default function TournamentView() {
 
       {isFormOpen && (
         <TournamentForm 
+          tournament={currentTournament}
+          availablePlayers={MOCK_PLAYERS}
           onClose={() => setIsFormOpen(false)}
           onSubmit={handleCreateTournament}
         />
