@@ -10,6 +10,7 @@ import { apiService } from '../services/apiService';
 export default function TournamentView() {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [editingMatch, setEditingMatch] = useState<Match | undefined>(undefined);
+  const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [activeRound, setActiveRound] = useState(0);
   const [hoveredPlayerId, setHoveredPlayerId] = useState<string | null>(null);
@@ -44,14 +45,17 @@ export default function TournamentView() {
 
   const handleTournamentSubmit = async (data: Partial<Tournament>) => {
     try {
-      if (currentTournament && data.id === currentTournament.id) {
+      if (editingTournament) {
         const updated = await apiService.updateTournament(data as Tournament);
-        setCurrentTournament(updated);
+        if (currentTournament?.id === updated.id) {
+          setCurrentTournament(updated);
+        }
       } else {
         const created = await apiService.createTournament(data as Tournament);
         setCurrentTournament(created);
       }
       setIsFormOpen(false);
+      setEditingTournament(null);
     } catch (error) {
       console.error('Failed to save tournament:', error);
     }
@@ -74,6 +78,12 @@ export default function TournamentView() {
   };
 
   const handleEditTournament = () => {
+    setEditingTournament(currentTournament);
+    setIsFormOpen(true);
+  };
+
+  const handleNewTournament = () => {
+    setEditingTournament(null);
     setIsFormOpen(true);
   };
 
@@ -122,7 +132,7 @@ export default function TournamentView() {
           </div>
         </div>
         <button
-          onClick={() => setIsFormOpen(true)}
+          onClick={handleNewTournament}
           className="bg-[#141414] text-white px-6 py-3 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-[#2A2A2A] transition-all shadow-lg flex items-center gap-2"
         >
           New Tournament
@@ -322,9 +332,12 @@ export default function TournamentView() {
 
       {isFormOpen && (
         <TournamentForm 
-          tournament={currentTournament}
+          tournament={editingTournament}
           availablePlayers={allPlayers}
-          onClose={() => setIsFormOpen(false)}
+          onClose={() => {
+            setIsFormOpen(false);
+            setEditingTournament(null);
+          }}
           onSubmit={handleTournamentSubmit}
         />
       )}

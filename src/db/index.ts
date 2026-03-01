@@ -157,13 +157,15 @@ export const dbService = {
     const insertTM = db.prepare('UPDATE matches SET tournamentId = ? WHERE id = ?');
 
     db.transaction(() => {
-      for (const p of tournament.players) {
-        insertTP.run(tournament.id, p.id);
+      if (tournament.players) {
+        for (const p of tournament.players) {
+          insertTP.run(tournament.id, p.id);
+        }
       }
-      for (const m of tournament.matches) {
-        // If match doesn't exist, we might need to create it, but for now we assume they are existing or handled separately
-        // In this app's current flow, tournaments are created with players and matches
-        insertTM.run(tournament.id, m.id);
+      if (tournament.matches) {
+        for (const m of tournament.matches) {
+          insertTM.run(tournament.id, m.id);
+        }
       }
     })();
 
@@ -177,14 +179,18 @@ export const dbService = {
     db.transaction(() => {
       db.prepare('DELETE FROM tournament_players WHERE tournamentId = ?').run(id);
       const insertTP = db.prepare('INSERT INTO tournament_players (tournamentId, playerId) VALUES (?, ?)');
-      for (const p of tournament.players) {
-        insertTP.run(id, p.id);
+      if (tournament.players) {
+        for (const p of tournament.players) {
+          insertTP.run(id, p.id);
+        }
       }
 
       // Update matches (assuming they might have changed)
       const updateTM = db.prepare('UPDATE matches SET tournamentId = ? WHERE id = ?');
-      for (const m of tournament.matches) {
-        updateTM.run(id, m.id);
+      if (tournament.matches) {
+        for (const m of tournament.matches) {
+          updateTM.run(id, m.id);
+        }
       }
     })();
 
