@@ -1,0 +1,5 @@
+{
+  "name": "Carom Master",
+  "description": "A professional tournament management system for Carom Billiards, featuring real-time scoring, brackets, and statistics.",
+  "requestFramePermissions": []
+}

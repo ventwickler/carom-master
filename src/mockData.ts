@@ -1,0 +1,57 @@
+import { Player, Match } from './types';
+
+export const MOCK_PLAYERS: Player[] = [
+  { id: '1', name: 'Dick Jaspers', country: 'Netherlands', ranking: 1 },
+  { id: '2', name: 'Torbjörn Blomdahl', country: 'Sweden', ranking: 2 },
+  { id: '3', name: 'Marco Zanetti', country: 'Italy', ranking: 3 },
+  { id: '4', name: 'Eddy Merckx', country: 'Belgium', ranking: 4 },
+  { id: '5', name: 'Dani Sánchez', country: 'Spain', ranking: 5 },
+  { id: '6', name: 'Quyet Chien Tran', country: 'Vietnam', ranking: 6 },
+  { id: '7', name: 'Sameh Sidhom', country: 'Egypt', ranking: 7 },
+  { id: '8', name: 'Tayfun Taşdemir', country: 'Turkey', ranking: 8 },
+];
+
+export const MOCK_MATCHES: Match[] = [
+  {
+    id: 'm1',
+    player1Id: '1',
+    player2Id: '2',
+    player1Score: 40,
+    player2Score: 32,
+    innings: 18,
+    status: 'completed',
+    startTime: '2024-05-20T10:00:00Z',
+    tableNumber: 1,
+    targetPoints: 40,
+    highRun1: 12,
+    highRun2: 7,
+  },
+  {
+    id: 'm2',
+    player1Id: '3',
+    player2Id: '4',
+    player1Score: 15,
+    player2Score: 18,
+    innings: 10,
+    status: 'live',
+    startTime: '2024-05-20T12:00:00Z',
+    tableNumber: 2,
+    targetPoints: 40,
+    highRun1: 5,
+    highRun2: 6,
+  },
+  {
+    id: 'm3',
+    player1Id: '5',
+    player2Id: '6',
+    player1Score: 0,
+    player2Score: 0,
+    innings: 0,
+    status: 'upcoming',
+    startTime: '2024-05-20T14:00:00Z',
+    tableNumber: 3,
+    targetPoints: 40,
+    highRun1: 0,
+    highRun2: 0,
+  },
+];
