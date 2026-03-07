@@ -3,7 +3,7 @@ import MatchDetailsModal from './MatchDetailsModal';
 import TournamentForm from './TournamentForm';
 import MatchRecordForm from './MatchRecordForm';
 import { Match, Tournament, Player } from '../types';
-import { MapPin, Calendar, Trophy, Edit2, ChevronLeft, ChevronRight, Play, Activity } from 'lucide-react';
+import { MapPin, Calendar, Trophy, Edit2, ChevronLeft, ChevronRight, Play, Activity, Search, Filter } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { apiService } from '../services/apiService';
 
@@ -15,26 +15,35 @@ export default function TournamentView() {
   const [activeRound, setActiveRound] = useState(0);
   const [hoveredPlayerId, setHoveredPlayerId] = useState<number | null>(null);
   const [currentTournament, setCurrentTournament] = useState<Tournament | null>(null);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('all');
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const [fetchedTournaments, players] = await Promise.all([
+        apiService.getTournaments(),
+        apiService.getPlayers()
+      ]);
+      setTournaments(fetchedTournaments);
+      setAllPlayers(players);
+      
+      // If we were viewing a tournament, refresh its data
+      if (currentTournament) {
+        const updated = fetchedTournaments.find(t => t.id === currentTournament.id);
+        if (updated) setCurrentTournament(updated);
+      }
+    } catch (error) {
+      console.error('Failed to fetch tournament data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [tournaments, players] = await Promise.all([
-          apiService.getTournaments(),
-          apiService.getPlayers()
-        ]);
-        if (tournaments.length > 0) {
-          setCurrentTournament(tournaments[0]);
-        }
-        setAllPlayers(players);
-      } catch (error) {
-        console.error('Failed to fetch tournament data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
@@ -54,6 +63,7 @@ export default function TournamentView() {
         const created = await apiService.createTournament(data as Tournament);
         setCurrentTournament(created);
       }
+      await fetchData();
       setIsFormOpen(false);
       setEditingTournament(null);
     } catch (error) {
@@ -99,10 +109,131 @@ export default function TournamentView() {
     );
   }
 
+  if (!currentTournament && !isLoading) {
+    const filteredTournaments = tournaments.filter(t => {
+      const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           t.location.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesType = filterType === 'all' || t.type === filterType;
+      return matchesSearch && matchesType;
+    });
+
+    return (
+      <div className="p-8 space-y-8 bg-[#E4E3E0] min-h-screen text-[#141414]">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+          <div>
+            <h2 className="text-4xl font-bold tracking-tighter uppercase italic font-serif">Tournaments</h2>
+            <p className="text-xs tracking-widest opacity-50 uppercase mt-1">Select a tournament to view details</p>
+          </div>
+          <button
+            onClick={handleNewTournament}
+            className="bg-[#141414] text-white px-6 py-3 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-[#2A2A2A] transition-all shadow-lg flex items-center gap-2"
+          >
+            New Tournament
+          </button>
+        </header>
+
+        {/* Filter Bar */}
+        <div className="flex flex-col md:flex-row gap-4 items-center bg-white/50 p-4 rounded-2xl border border-[#141414]/5">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
+            <input 
+              type="text"
+              placeholder="Search tournaments or locations..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white border border-[#141414]/10 rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-[#141414] transition-colors"
+            />
+          </div>
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <Filter size={18} className="opacity-20 hidden md:block" />
+            <select 
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="flex-1 md:w-48 bg-white border border-[#141414]/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-[#141414] transition-colors appearance-none cursor-pointer font-bold uppercase tracking-widest text-[10px]"
+            >
+              <option value="all">All Formats</option>
+              <option value="knockout">Knockout</option>
+              <option value="round-robin">Round Robin</option>
+              <option value="double-elimination">Double Elimination</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredTournaments.map((t) => (
+            <div 
+              key={t.id}
+              onClick={() => setCurrentTournament(t)}
+              className="bg-white border border-[#141414]/10 p-6 rounded-2xl hover:border-[#141414] transition-all cursor-pointer group"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2 bg-[#141414]/5 rounded-lg group-hover:bg-[#141414] group-hover:text-white transition-colors">
+                  <Trophy size={20} />
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">
+                  {t.type.replace('-', ' ')}
+                </span>
+              </div>
+              <h3 className="text-xl font-bold mb-2">{t.name}</h3>
+              <div className="space-y-2 opacity-50">
+                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
+                  <MapPin size={12} /> {t.location}
+                </div>
+                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
+                  <Calendar size={12} /> {new Date(t.startDate).toLocaleDateString()}
+                </div>
+              </div>
+              <div className="mt-6 pt-6 border-t border-[#141414]/5 flex justify-between items-center">
+                <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">
+                  {t.players?.length || 0} Players
+                </span>
+                <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest group-hover:translate-x-1 transition-transform">
+                  View Bracket <ChevronRight size={12} />
+                </div>
+              </div>
+            </div>
+          ))}
+          
+          {filteredTournaments.length === 0 && (
+            <div className="col-span-full py-20 text-center border-2 border-dashed border-[#141414]/10 rounded-3xl">
+              <p className="text-sm opacity-40 uppercase tracking-widest font-bold">No tournaments match your filters</p>
+              {(searchTerm || filterType !== 'all') && (
+                <button 
+                  onClick={() => { setSearchTerm(''); setFilterType('all'); }}
+                  className="mt-4 text-xs font-bold uppercase tracking-widest underline underline-offset-4"
+                >
+                  Clear all filters
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {isFormOpen && (
+          <TournamentForm 
+            tournament={editingTournament}
+            availablePlayers={allPlayers}
+            onClose={() => {
+              setIsFormOpen(false);
+              setEditingTournament(null);
+            }}
+            onSubmit={handleTournamentSubmit}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="p-8 space-y-8 bg-[#E4E3E0] min-h-screen text-[#141414]">
       <header className="flex justify-between items-end">
         <div>
+          <button 
+            onClick={() => setCurrentTournament(null)}
+            className="flex items-center gap-1 text-[10px] uppercase tracking-widest font-bold opacity-40 hover:opacity-100 transition-opacity mb-2"
+          >
+            <ChevronLeft size={12} /> Back to Tournaments
+          </button>
           <div className="flex items-center gap-3">
             <h2 className="text-4xl font-bold tracking-tighter uppercase italic font-serif">
               {currentTournament?.name || 'Tournament Bracket'}
