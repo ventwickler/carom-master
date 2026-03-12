@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 import { Player, Match, Tournament } from '../types';
-import { MOCK_PLAYERS, MOCK_MATCHES } from '../mockData';
+import { MOCK_PLAYERS, MOCK_MATCHES, MOCK_TOURNAMENTS } from '../mockData';
 import path from 'path';
 
 const db = new Database('carom.db');
@@ -67,26 +67,29 @@ if (playerCount.count === 0) {
       insertPlayer.run(player.id, player.name, player.country, player.ranking || null, player.avatar || null);
     }
 
-    const tournamentId = 1;
-    insertTournament.run(
-      tournamentId,
-      'Seoul World Cup 2024',
-      'Seoul, South Korea',
-      'knockout',
-      '2024-05-01',
-      '2024-05-07',
-      40,
-      0
-    );
+    for (const tournament of MOCK_TOURNAMENTS) {
+      insertTournament.run(
+        tournament.id,
+        tournament.name,
+        tournament.location,
+        tournament.type,
+        tournament.startDate,
+        tournament.endDate,
+        tournament.targetPoints || null,
+        tournament.inningsLimit || null
+      );
 
-    for (const player of MOCK_PLAYERS) {
-      insertTournamentPlayer.run(tournamentId, player.id);
+      if (tournament.players) {
+        for (const player of tournament.players) {
+          insertTournamentPlayer.run(tournament.id, player.id);
+        }
+      }
     }
 
     for (const match of MOCK_MATCHES) {
       insertMatch.run(
         match.id,
-        tournamentId,
+        match.tournamentId || null,
         match.player1Id,
         match.player2Id,
         match.player1Score,
@@ -124,8 +127,8 @@ export const dbService = {
     return db.prepare('SELECT * FROM matches').all() as Match[];
   },
   createMatch: (match: Match) => {
-    const info = db.prepare('INSERT INTO matches (player1Id, player2Id, player1Score, player2Score, innings, status, startTime, tableNumber, targetPoints, highRun1, highRun2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .run(match.player1Id, match.player2Id, match.player1Score, match.player2Score, match.innings, match.status, match.startTime, match.tableNumber, match.targetPoints, match.highRun1, match.highRun2);
+    const info = db.prepare('INSERT INTO matches (tournamentId, player1Id, player2Id, player1Score, player2Score, innings, status, startTime, tableNumber, targetPoints, highRun1, highRun2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(match.tournamentId || null, match.player1Id, match.player2Id, match.player1Score, match.player2Score, match.innings, match.status, match.startTime, match.tableNumber, match.targetPoints, match.highRun1, match.highRun2);
     return { ...match, id: info.lastInsertRowid as number };
   },
   updateMatch: (id: number, match: Match) => {

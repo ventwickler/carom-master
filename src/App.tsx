@@ -4,7 +4,7 @@ import Dashboard from './components/Dashboard';
 import Scoreboard from './components/Scoreboard';
 import PlayerList from './components/PlayerList';
 import TournamentView from './components/TournamentView';
-import TournamentForm from './components/TournamentForm';
+import MatchManagement from './components/MatchManagement';
 import { MOCK_MATCHES, MOCK_PLAYERS } from './mockData';
 
 export default function App() {
@@ -15,11 +15,7 @@ export default function App() {
       case 'dashboard':
         return <Dashboard />;
       case 'matches':
-        // For demo, show the live match
-        const liveMatch = MOCK_MATCHES.find(m => m.status === 'live') || MOCK_MATCHES[0];
-        const p1 = MOCK_PLAYERS.find(p => p.id === liveMatch.player1Id)!;
-        const p2 = MOCK_PLAYERS.find(p => p.id === liveMatch.player2Id)!;
-        return <Scoreboard match={liveMatch} player1={p1} player2={p2} />;
+        return <MatchManagement />;
       case 'tournament':
         return <TournamentView />;
       case 'players':

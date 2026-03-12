@@ -1,4 +1,4 @@
-import { Player, Match } from './types';
+import { Player, Match, Tournament } from './types';
 
 export const MOCK_PLAYERS: Player[] = [
   { id: 1, name: 'Dick Jaspers', country: 'Netherlands', ranking: 1 },
@@ -22,6 +22,7 @@ export const MOCK_PLAYERS: Player[] = [
 export const MOCK_MATCHES: Match[] = [
   {
     id: 101,
+    tournamentId: 1,
     player1Id: 1,
     player2Id: 2,
     player1Score: 40,
@@ -36,6 +37,7 @@ export const MOCK_MATCHES: Match[] = [
   },
   {
     id: 102,
+    tournamentId: 1,
     player1Id: 3,
     player2Id: 4,
     player1Score: 40,
@@ -50,6 +52,7 @@ export const MOCK_MATCHES: Match[] = [
   },
   {
     id: 103,
+    tournamentId: 1,
     player1Id: 5,
     player2Id: 6,
     player1Score: 40,
@@ -64,6 +67,7 @@ export const MOCK_MATCHES: Match[] = [
   },
   {
     id: 104,
+    tournamentId: 1,
     player1Id: 7,
     player2Id: 8,
     player1Score: 40,
@@ -78,6 +82,7 @@ export const MOCK_MATCHES: Match[] = [
   },
   {
     id: 105,
+    tournamentId: 1,
     player1Id: 9,
     player2Id: 10,
     player1Score: 22,
@@ -92,6 +97,7 @@ export const MOCK_MATCHES: Match[] = [
   },
   {
     id: 106,
+    tournamentId: 1,
     player1Id: 11,
     player2Id: 12,
     player1Score: 15,
@@ -106,6 +112,7 @@ export const MOCK_MATCHES: Match[] = [
   },
   {
     id: 107,
+    tournamentId: 1,
     player1Id: 13,
     player2Id: 14,
     player1Score: 0,
@@ -120,6 +127,7 @@ export const MOCK_MATCHES: Match[] = [
   },
   {
     id: 108,
+    tournamentId: 1,
     player1Id: 15,
     player2Id: 16,
     player1Score: 0,
@@ -132,4 +140,31 @@ export const MOCK_MATCHES: Match[] = [
     highRun1: 0,
     highRun2: 0,
   },
+];
+
+export const MOCK_TOURNAMENTS: Tournament[] = [
+  {
+    id: 1,
+    name: 'Seoul World Cup 2024',
+    location: 'Seoul, South Korea',
+    type: 'knockout',
+    startDate: '2024-05-01',
+    endDate: '2024-05-07',
+    targetPoints: 40,
+    inningsLimit: 0,
+    players: MOCK_PLAYERS,
+    matches: MOCK_MATCHES,
+  },
+  {
+    id: 2,
+    name: 'European Championship 2024',
+    location: 'Antalya, Turkey',
+    type: 'round-robin',
+    startDate: '2024-06-15',
+    endDate: '2024-06-22',
+    targetPoints: 40,
+    inningsLimit: 50,
+    players: MOCK_PLAYERS.slice(0, 8),
+    matches: [],
+  }
 ];

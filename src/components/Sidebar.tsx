@@ -10,7 +10,7 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'matches', label: 'Live Matches', icon: PlayCircle },
+  { id: 'matches', label: 'Matches', icon: PlayCircle },
   { id: 'tournament', label: 'Tournament', icon: Trophy },
   { id: 'players', label: 'Players', icon: Users },
   { id: 'settings', label: 'Settings', icon: Settings },

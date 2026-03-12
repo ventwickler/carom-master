@@ -456,6 +456,7 @@ export default function TournamentView() {
         <MatchRecordForm
           match={editingMatch}
           allPlayers={allPlayers}
+          allTournaments={tournaments}
           onClose={() => setEditingMatch(undefined)}
           onSubmit={handleMatchUpdate}
         />

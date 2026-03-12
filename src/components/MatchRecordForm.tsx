@@ -1,25 +1,22 @@
 import React, { useState } from 'react';
 import { X, Trophy, Hash, Users, Calendar } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Player, Match } from '../types';
+import { Player, Match, Tournament } from '../types';
 
 interface MatchRecordFormProps {
   player?: Player;
   match?: Match;
   allPlayers: Player[];
+  allTournaments?: Tournament[];
   onClose: () => void;
   onSubmit: (match: Match) => void;
 }
 
-export default function MatchRecordForm({ player: initialPlayer, match, allPlayers, onClose, onSubmit }: MatchRecordFormProps) {
-  const player = initialPlayer || (match ? allPlayers.find(p => p.id === match.player1Id) : undefined);
-  
-  if (!player) return null;
-
-  const opponents = allPlayers.filter(p => p.id !== player.id);
-  
+export default function MatchRecordForm({ player: initialPlayer, match, allPlayers, allTournaments = [], onClose, onSubmit }: MatchRecordFormProps) {
   const [formData, setFormData] = useState({
-    opponentId: match?.player2Id || '',
+    player1Id: match?.player1Id || initialPlayer?.id || '',
+    player2Id: match?.player2Id || '',
+    tournamentId: match?.tournamentId || '',
     playerScore: match?.player1Score || 0,
     opponentScore: match?.player2Score || 0,
     innings: match?.innings || 0,
@@ -32,12 +29,13 @@ export default function MatchRecordForm({ player: initialPlayer, match, allPlaye
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.opponentId) return;
+    if (!formData.player1Id || !formData.player2Id) return;
 
     const updatedMatch: Match = {
       id: match?.id || 0,
-      player1Id: player.id,
-      player2Id: Number(formData.opponentId),
+      tournamentId: formData.tournamentId ? Number(formData.tournamentId) : undefined,
+      player1Id: Number(formData.player1Id),
+      player2Id: Number(formData.player2Id),
       player1Score: formData.playerScore,
       player2Score: formData.opponentScore,
       innings: formData.innings,
@@ -65,7 +63,7 @@ export default function MatchRecordForm({ player: initialPlayer, match, allPlaye
               {match ? 'Edit Match Result' : 'Record Match Result'}
             </h2>
             <p className="text-[10px] uppercase tracking-widest opacity-40 mt-1">
-              {match ? `Update official score for match ${match.id}` : `Submit official score for ${player.name}`}
+              {match ? `Update official score for match ${match.id}` : `Submit official score for match`}
             </p>
           </div>
           <button 
@@ -77,12 +75,36 @@ export default function MatchRecordForm({ player: initialPlayer, match, allPlaye
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6 text-[#141414]">
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase tracking-widest font-bold opacity-50">Tournament</label>
+            <select
+              className="w-full bg-white border border-[#141414]/10 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-[#141414] outline-none transition-all appearance-none font-bold"
+              value={formData.tournamentId}
+              onChange={(e) => setFormData({ ...formData, tournamentId: e.target.value })}
+            >
+              <option value="">Exhibition Match (No Tournament)</option>
+              {allTournaments.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </div>
+
           <div className="grid grid-cols-2 gap-6">
-            {/* Player Side */}
+            {/* Player 1 Side */}
             <div className="space-y-4">
-              <div className="p-4 bg-white border border-[#141414]/10 rounded-2xl">
-                <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-2">Player</p>
-                <p className="font-bold">{player.name}</p>
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase tracking-widest font-bold opacity-50">Player 1</label>
+                <select
+                  required
+                  className="w-full bg-white border border-[#141414]/10 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-[#141414] outline-none transition-all appearance-none font-bold"
+                  value={formData.player1Id}
+                  onChange={(e) => setFormData({ ...formData, player1Id: e.target.value })}
+                >
+                  <option value="">Select Player</option>
+                  {allPlayers.map(p => (
+                    <option key={p.id} value={p.id} disabled={Number(formData.player2Id) === p.id}>{p.name}</option>
+                  ))}
+                </select>
               </div>
               
               <div className="space-y-1.5">
@@ -109,19 +131,19 @@ export default function MatchRecordForm({ player: initialPlayer, match, allPlaye
               </div>
             </div>
 
-            {/* Opponent Side */}
+            {/* Player 2 Side */}
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest font-bold opacity-50">Opponent</label>
+                <label className="text-[10px] uppercase tracking-widest font-bold opacity-50">Player 2</label>
                 <select
                   required
                   className="w-full bg-white border border-[#141414]/10 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-[#141414] outline-none transition-all appearance-none font-bold"
-                  value={formData.opponentId}
-                  onChange={(e) => setFormData({ ...formData, opponentId: e.target.value })}
+                  value={formData.player2Id}
+                  onChange={(e) => setFormData({ ...formData, player2Id: e.target.value })}
                 >
                   <option value="">Select Opponent</option>
-                  {opponents.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
+                  {allPlayers.map(p => (
+                    <option key={p.id} value={p.id} disabled={Number(formData.player1Id) === p.id}>{p.name}</option>
                   ))}
                 </select>
               </div>
