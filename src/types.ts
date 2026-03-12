@@ -8,6 +8,16 @@ export type Player = {
 
 export type MatchStatus = 'upcoming' | 'live' | 'completed';
 
+export type MatchInning = {
+  id?: number;
+  matchId: number;
+  inningNumber: number;
+  player1Score: number;
+  player2Score: number;
+  player1Run: number;
+  player2Run: number;
+};
+
 export type Match = {
   id: number;
   tournamentId?: number;

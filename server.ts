@@ -44,6 +44,17 @@ async function startServer() {
     res.json(updatedMatch);
   });
 
+  app.get("/api/matches/:id/innings", (req, res) => {
+    const id = Number(req.params.id);
+    res.json(dbService.getMatchInnings(id));
+  });
+
+  app.post("/api/matches/:id/innings", (req, res) => {
+    const newInning = req.body;
+    const result = dbService.addMatchInning(newInning);
+    res.status(201).json(result);
+  });
+
   app.get("/api/tournaments", (req, res) => {
     res.json(dbService.getTournaments());
   });

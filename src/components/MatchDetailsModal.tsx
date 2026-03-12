@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Trophy, Target, Activity, Calendar, Clock, ChevronRight, TrendingUp } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Match, Player } from '../types';
+import { Match, Player, MatchInning } from '../types';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { apiService } from '../services/apiService';
 
 interface MatchDetailsModalProps {
   match: Match;
@@ -13,15 +14,31 @@ interface MatchDetailsModalProps {
 }
 
 export default function MatchDetailsModal({ match, player1, player2, onClose, onEdit }: MatchDetailsModalProps) {
-  // Mock score progression data
-  const scoreProgression = Array.from({ length: match.innings }, (_, i) => ({
-    inning: i + 1,
-    p1: Math.min(match.player1Score, Math.floor((match.player1Score / match.innings) * (i + 1) + (Math.random() * 2 - 1))),
-    p2: Math.min(match.player2Score, Math.floor((match.player2Score / match.innings) * (i + 1) + (Math.random() * 2 - 1))),
+  const [innings, setInnings] = useState<MatchInning[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchInnings = async () => {
+      try {
+        const data = await apiService.getMatchInnings(match.id);
+        setInnings(data);
+      } catch (error) {
+        console.error('Failed to fetch innings:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchInnings();
+  }, [match.id]);
+
+  const scoreProgression = innings.map(inning => ({
+    inning: inning.inningNumber,
+    p1: inning.player1Score,
+    p2: inning.player2Score,
   }));
 
-  const p1Avg = (match.player1Score / match.innings).toFixed(3);
-  const p2Avg = (match.player2Score / match.innings).toFixed(3);
+  const p1Avg = (match.innings > 0 ? (match.player1Score / match.innings) : 0).toFixed(3);
+  const p2Avg = (match.innings > 0 ? (match.player2Score / match.innings) : 0).toFixed(3);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">

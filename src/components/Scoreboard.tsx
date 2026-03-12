@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Match, Player } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Match, Player, MatchInning } from '../types';
 import { cn } from '../lib/utils';
-import { Timer, Hash, TrendingUp, User, Activity, ArrowLeft } from 'lucide-react';
+import { Timer, Hash, TrendingUp, User, Activity, ArrowLeft, Plus, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { apiService } from '../services/apiService';
 
 interface ScoreboardProps {
   match: Match;
@@ -11,13 +12,69 @@ interface ScoreboardProps {
   onBack?: () => void;
 }
 
-export default function Scoreboard({ match, player1, player2, onBack }: ScoreboardProps) {
+export default function Scoreboard({ match: initialMatch, player1, player2, onBack }: ScoreboardProps) {
+  const [match, setMatch] = useState(initialMatch);
   const [currentRun, setCurrentRun] = useState(0);
   const [activePlayer, setActivePlayer] = useState<1 | 2>(1);
   const [timeLeft, setTimeLeft] = useState(40); // 40 seconds per shot
+  const [p1Run, setP1Run] = useState(0);
 
   const avg1 = match.innings > 0 ? (match.player1Score / match.innings).toFixed(3) : '0.000';
   const avg2 = match.innings > 0 ? (match.player2Score / match.innings).toFixed(3) : '0.000';
+
+  const handleAddPoint = () => {
+    setCurrentRun(prev => prev + 1);
+    setTimeLeft(40); // Reset shot clock
+  };
+
+  const handleEndTurn = async () => {
+    if (activePlayer === 1) {
+      // Player 1 finished their turn, save run and switch to player 2
+      setP1Run(currentRun);
+      setActivePlayer(2);
+      setCurrentRun(0);
+      setTimeLeft(40);
+    } else {
+      // Player 2 finished their turn, inning is complete
+      const p2Run = currentRun;
+      const newInningNumber = match.innings + 1;
+      const newP1Score = match.player1Score + p1Run;
+      const newP2Score = match.player2Score + p2Run;
+      const newHighRun1 = Math.max(match.highRun1, p1Run);
+      const newHighRun2 = Math.max(match.highRun2, p2Run);
+
+      const inning: MatchInning = {
+        matchId: match.id,
+        inningNumber: newInningNumber,
+        player1Score: newP1Score,
+        player2Score: newP2Score,
+        player1Run: p1Run,
+        player2Run: p2Run
+      };
+
+      const updatedMatch: Match = {
+        ...match,
+        player1Score: newP1Score,
+        player2Score: newP2Score,
+        innings: newInningNumber,
+        highRun1: newHighRun1,
+        highRun2: newHighRun2,
+        status: (newP1Score >= match.targetPoints || newP2Score >= match.targetPoints) ? 'completed' : 'live'
+      };
+
+      try {
+        await apiService.addMatchInning(match.id, inning);
+        await apiService.updateMatch(updatedMatch);
+        setMatch(updatedMatch);
+        setActivePlayer(1);
+        setCurrentRun(0);
+        setP1Run(0);
+        setTimeLeft(40);
+      } catch (error) {
+        console.error('Failed to save inning:', error);
+      }
+    }
+  };
 
   return (
     <div className="bg-[#0A0A0A] min-h-screen p-8 text-[#E4E3E0] font-sans">
@@ -209,6 +266,24 @@ export default function Scoreboard({ match, player1, player2, onBack }: Scoreboa
             </div>
           ))}
         </div>
+
+        {/* Action Buttons */}
+        {match.status === 'live' && (
+          <div className="flex justify-center gap-6 mt-8">
+            <button 
+              onClick={handleAddPoint}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-12 py-6 rounded-2xl font-bold text-2xl flex items-center gap-3 transition-colors shadow-[0_0_40px_rgba(16,185,129,0.2)]"
+            >
+              <Plus size={28} /> Point
+            </button>
+            <button 
+              onClick={handleEndTurn}
+              className="bg-[#1A1A1A] hover:bg-[#2A2A2A] border border-[#2A2A2A] text-white px-12 py-6 rounded-2xl font-bold text-xl flex items-center gap-3 transition-colors"
+            >
+              <Check size={24} /> End Turn
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

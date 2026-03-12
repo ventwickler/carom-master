@@ -1,4 +1,4 @@
-import { Player, Match, Tournament } from '../types';
+import { Player, Match, Tournament, MatchInning } from '../types';
 
 const API_BASE = '/api';
 
@@ -45,6 +45,20 @@ export const apiService = {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(match),
+    });
+    return res.json();
+  },
+
+  async getMatchInnings(matchId: number): Promise<MatchInning[]> {
+    const res = await fetch(`${API_BASE}/matches/${matchId}/innings`);
+    return res.json();
+  },
+
+  async addMatchInning(matchId: number, inning: MatchInning): Promise<MatchInning> {
+    const res = await fetch(`${API_BASE}/matches/${matchId}/innings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(inning),
     });
     return res.json();
   },

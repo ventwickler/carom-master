@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { Player, Match, Tournament } from '../types';
+import { Player, Match, Tournament, MatchInning } from '../types';
 import { MOCK_PLAYERS, MOCK_MATCHES, MOCK_TOURNAMENTS } from '../mockData';
 import path from 'path';
 
@@ -52,6 +52,17 @@ db.exec(`
     FOREIGN KEY (tournamentId) REFERENCES tournaments(id),
     FOREIGN KEY (playerId) REFERENCES players(id)
   );
+
+  CREATE TABLE IF NOT EXISTS match_innings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    matchId INTEGER NOT NULL,
+    inningNumber INTEGER NOT NULL,
+    player1Score INTEGER NOT NULL,
+    player2Score INTEGER NOT NULL,
+    player1Run INTEGER NOT NULL,
+    player2Run INTEGER NOT NULL,
+    FOREIGN KEY (matchId) REFERENCES matches(id)
+  );
 `);
 
 // Seed data if empty
@@ -61,6 +72,7 @@ if (playerCount.count === 0) {
   const insertTournament = db.prepare('INSERT INTO tournaments (id, name, location, type, startDate, endDate, targetPoints, inningsLimit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
   const insertMatch = db.prepare('INSERT INTO matches (id, tournamentId, player1Id, player2Id, player1Score, player2Score, innings, status, startTime, tableNumber, targetPoints, highRun1, highRun2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
   const insertTournamentPlayer = db.prepare('INSERT INTO tournament_players (tournamentId, playerId) VALUES (?, ?)');
+  const insertInning = db.prepare('INSERT INTO match_innings (matchId, inningNumber, player1Score, player2Score, player1Run, player2Run) VALUES (?, ?, ?, ?, ?, ?)');
 
   db.transaction(() => {
     for (const player of MOCK_PLAYERS) {
@@ -102,6 +114,33 @@ if (playerCount.count === 0) {
         match.highRun1,
         match.highRun2
       );
+
+      // Generate mock innings for completed matches
+      if (match.status === 'completed' && match.innings > 0) {
+        let p1Score = 0;
+        let p2Score = 0;
+        for (let i = 1; i <= match.innings; i++) {
+          const p1Run = Math.floor(Math.random() * 4);
+          const p2Run = Math.floor(Math.random() * 4);
+          p1Score += p1Run;
+          p2Score += p2Run;
+          
+          // Ensure final score matches on last inning
+          if (i === match.innings) {
+            p1Score = match.player1Score;
+            p2Score = match.player2Score;
+          }
+
+          insertInning.run(
+            match.id,
+            i,
+            p1Score,
+            p2Score,
+            i === match.innings ? match.player1Score - (p1Score - p1Run) : p1Run,
+            i === match.innings ? match.player2Score - (p2Score - p2Run) : p2Run
+          );
+        }
+      }
     }
   })();
 }
@@ -135,6 +174,16 @@ export const dbService = {
     db.prepare('UPDATE matches SET player1Score = ?, player2Score = ?, innings = ?, status = ?, highRun1 = ?, highRun2 = ? WHERE id = ?')
       .run(match.player1Score, match.player2Score, match.innings, match.status, match.highRun1, match.highRun2, id);
     return match;
+  },
+
+  // Innings
+  getMatchInnings: (matchId: number): MatchInning[] => {
+    return db.prepare('SELECT * FROM match_innings WHERE matchId = ? ORDER BY inningNumber ASC').all(matchId) as MatchInning[];
+  },
+  addMatchInning: (inning: MatchInning) => {
+    const info = db.prepare('INSERT INTO match_innings (matchId, inningNumber, player1Score, player2Score, player1Run, player2Run) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(inning.matchId, inning.inningNumber, inning.player1Score, inning.player2Score, inning.player1Run, inning.player2Run);
+    return { ...inning, id: info.lastInsertRowid as number };
   },
 
   // Tournaments
