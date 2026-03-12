@@ -39,14 +39,14 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             onClick={() => setActiveTab(item.id)}
             className={cn(
               "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group",
-              activeTab === item.id 
+              (activeTab === item.id || (activeTab === 'scoreboard' && item.id === 'matches'))
                 ? "bg-[#E4E3E0] text-[#141414]" 
                 : "hover:bg-[#2A2A2A] text-[#888]"
             )}
           >
             <item.icon size={18} className={cn(
               "transition-colors",
-              activeTab === item.id ? "text-[#141414]" : "group-hover:text-[#E4E3E0]"
+              (activeTab === item.id || (activeTab === 'scoreboard' && item.id === 'matches')) ? "text-[#141414]" : "group-hover:text-[#E4E3E0]"
             )} />
             <span className="text-sm font-medium">{item.label}</span>
           </button>

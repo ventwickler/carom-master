@@ -6,16 +6,35 @@ import PlayerList from './components/PlayerList';
 import TournamentView from './components/TournamentView';
 import MatchManagement from './components/MatchManagement';
 import { MOCK_MATCHES, MOCK_PLAYERS } from './mockData';
+import { Match, Player } from './types';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeScoreboardMatch, setActiveScoreboardMatch] = useState<{match: Match, p1: Player, p2: Player} | null>(null);
+
+  const handleOpenScoreboard = (match: Match, p1: Player, p2: Player) => {
+    setActiveScoreboardMatch({ match, p1, p2 });
+    setActiveTab('scoreboard');
+  };
 
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard />;
       case 'matches':
-        return <MatchManagement />;
+        return <MatchManagement onOpenScoreboard={handleOpenScoreboard} />;
+      case 'scoreboard':
+        if (activeScoreboardMatch) {
+          return (
+            <Scoreboard 
+              match={activeScoreboardMatch.match} 
+              player1={activeScoreboardMatch.p1} 
+              player2={activeScoreboardMatch.p2} 
+              onBack={() => setActiveTab('matches')} 
+            />
+          );
+        }
+        return <MatchManagement onOpenScoreboard={handleOpenScoreboard} />;
       case 'tournament':
         return <TournamentView />;
       case 'players':

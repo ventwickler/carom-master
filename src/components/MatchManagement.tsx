@@ -6,7 +6,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import MatchRecordForm from './MatchRecordForm';
 import { cn } from '../lib/utils';
 
-export default function MatchManagement() {
+interface MatchManagementProps {
+  onOpenScoreboard?: (match: Match, p1: Player, p2: Player) => void;
+}
+
+export default function MatchManagement({ onOpenScoreboard }: MatchManagementProps) {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [selectedTournamentId, setSelectedTournamentId] = useState<number | 'all'>('all');
   const [matches, setMatches] = useState<Match[]>([]);
@@ -225,7 +229,22 @@ export default function MatchManagement() {
                       <Edit2 size={16} />
                     </button>
                     {match.status !== 'completed' && (
-                      <button className="bg-[#141414] text-white px-4 py-3 rounded-xl font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 hover:bg-[#2A2A2A] transition-all">
+                      <button 
+                        onClick={() => {
+                          if (match.status === 'upcoming') {
+                            const updatedMatch = { ...match, status: 'live' as const };
+                            handleMatchSubmit(updatedMatch);
+                            if (onOpenScoreboard && p1 && p2) {
+                              onOpenScoreboard(updatedMatch, p1, p2);
+                            }
+                          } else {
+                            if (onOpenScoreboard && p1 && p2) {
+                              onOpenScoreboard(match, p1, p2);
+                            }
+                          }
+                        }}
+                        className="bg-[#141414] text-white px-4 py-3 rounded-xl font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 hover:bg-[#2A2A2A] transition-all"
+                      >
                         {match.status === 'upcoming' ? 'Start Match' : 'Open Scoreboard'}
                         <ChevronRight size={14} />
                       </button>

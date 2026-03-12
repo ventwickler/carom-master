@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { Match, Player } from '../types';
 import { cn } from '../lib/utils';
-import { Timer, Hash, TrendingUp, User, Activity } from 'lucide-react';
+import { Timer, Hash, TrendingUp, User, Activity, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ScoreboardProps {
   match: Match;
   player1: Player;
   player2: Player;
+  onBack?: () => void;
 }
 
-export default function Scoreboard({ match, player1, player2 }: ScoreboardProps) {
+export default function Scoreboard({ match, player1, player2, onBack }: ScoreboardProps) {
   const [currentRun, setCurrentRun] = useState(0);
   const [activePlayer, setActivePlayer] = useState<1 | 2>(1);
   const [timeLeft, setTimeLeft] = useState(40); // 40 seconds per shot
@@ -24,6 +25,14 @@ export default function Scoreboard({ match, player1, player2 }: ScoreboardProps)
         {/* Header Info */}
         <div className="flex justify-between items-end border-b border-[#2A2A2A] pb-6">
           <div>
+            {onBack && (
+              <button 
+                onClick={onBack}
+                className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity"
+              >
+                <ArrowLeft size={14} /> Back to Matches
+              </button>
+            )}
             <h2 className="text-4xl font-bold tracking-tighter uppercase italic font-serif">Table {match.tableNumber}</h2>
             <p className="text-xs tracking-widest opacity-40 uppercase mt-1">World Cup - Quarter Finals</p>
           </div>
