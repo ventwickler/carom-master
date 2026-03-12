@@ -16,8 +16,8 @@ async function startServer() {
 
   app.post("/api/players", (req, res) => {
     const newPlayer = req.body as Player;
-    dbService.createPlayer(newPlayer);
-    res.status(201).json(newPlayer);
+    const createdPlayer = dbService.createPlayer(newPlayer);
+    res.status(201).json(createdPlayer);
   });
 
   app.put("/api/players/:id", (req, res) => {
@@ -33,8 +33,8 @@ async function startServer() {
 
   app.post("/api/matches", (req, res) => {
     const newMatch = req.body as Match;
-    dbService.createMatch(newMatch);
-    res.status(201).json(newMatch);
+    const createdMatch = dbService.createMatch(newMatch);
+    res.status(201).json(createdMatch);
   });
 
   app.put("/api/matches/:id", (req, res) => {
@@ -50,9 +50,14 @@ async function startServer() {
   });
 
   app.post("/api/matches/:id/innings", (req, res) => {
-    const newInning = req.body;
-    const result = dbService.addMatchInning(newInning);
-    res.status(201).json(result);
+    try {
+      const newInning = req.body;
+      const result = dbService.addMatchInning(newInning);
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error adding match inning:", error);
+      res.status(500).json({ error: String(error) });
+    }
   });
 
   app.delete("/api/matches/:id/innings/last", (req, res) => {
@@ -71,8 +76,8 @@ async function startServer() {
 
   app.post("/api/tournaments", (req, res) => {
     const newTournament = req.body as Tournament;
-    dbService.createTournament(newTournament);
-    res.status(201).json(newTournament);
+    const createdTournament = dbService.createTournament(newTournament);
+    res.status(201).json(createdTournament);
   });
 
   app.put("/api/tournaments/:id", (req, res) => {

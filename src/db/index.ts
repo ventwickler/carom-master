@@ -168,12 +168,55 @@ export const dbService = {
   createMatch: (match: Match) => {
     const info = db.prepare('INSERT INTO matches (tournamentId, player1Id, player2Id, player1Score, player2Score, innings, status, startTime, tableNumber, targetPoints, highRun1, highRun2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
       .run(match.tournamentId || null, match.player1Id, match.player2Id, match.player1Score, match.player2Score, match.innings, match.status, match.startTime, match.tableNumber, match.targetPoints, match.highRun1, match.highRun2);
-    return { ...match, id: info.lastInsertRowid as number };
+    const newMatch = { ...match, id: info.lastInsertRowid as number };
+    
+    // Generate mock innings if completed and has innings
+    if (newMatch.status === 'completed' && newMatch.innings > 0) {
+      dbService.generateMockInningsIfEmpty(newMatch);
+    }
+    
+    return newMatch;
   },
   updateMatch: (id: number, match: Match) => {
     db.prepare('UPDATE matches SET player1Score = ?, player2Score = ?, innings = ?, status = ?, highRun1 = ?, highRun2 = ? WHERE id = ?')
       .run(match.player1Score, match.player2Score, match.innings, match.status, match.highRun1, match.highRun2, id);
-    return match;
+    
+    const updatedMatch = { ...match, id };
+    if (updatedMatch.status === 'completed' && updatedMatch.innings > 0) {
+      dbService.generateMockInningsIfEmpty(updatedMatch);
+    }
+    
+    return updatedMatch;
+  },
+  generateMockInningsIfEmpty: (match: Match) => {
+    const count = db.prepare('SELECT count(*) as count FROM match_innings WHERE matchId = ?').get(match.id) as { count: number };
+    if (count.count === 0 && match.innings > 0) {
+      const insertInning = db.prepare('INSERT INTO match_innings (matchId, inningNumber, player1Score, player2Score, player1Run, player2Run) VALUES (?, ?, ?, ?, ?, ?)');
+      let p1Score = 0;
+      let p2Score = 0;
+      db.transaction(() => {
+        for (let i = 1; i <= match.innings; i++) {
+          const p1Run = Math.floor(Math.random() * 4);
+          const p2Run = Math.floor(Math.random() * 4);
+          p1Score += p1Run;
+          p2Score += p2Run;
+          
+          if (i === match.innings) {
+            p1Score = match.player1Score;
+            p2Score = match.player2Score;
+          }
+
+          insertInning.run(
+            match.id,
+            i,
+            p1Score,
+            p2Score,
+            i === match.innings ? match.player1Score - (p1Score - p1Run) : p1Run,
+            i === match.innings ? match.player2Score - (p2Score - p2Run) : p2Run
+          );
+        }
+      })();
+    }
   },
 
   // Innings
