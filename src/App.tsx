@@ -5,7 +5,6 @@ import Scoreboard from './components/Scoreboard';
 import PlayerList from './components/PlayerList';
 import TournamentView from './components/TournamentView';
 import MatchManagement from './components/MatchManagement';
-import { MOCK_MATCHES, MOCK_PLAYERS } from './mockData';
 import { Match, Player } from './types';
 
 export default function App() {

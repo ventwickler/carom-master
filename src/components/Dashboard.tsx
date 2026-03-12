@@ -1,17 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Match, Player } from '../types';
-import { MOCK_MATCHES, MOCK_PLAYERS } from '../mockData';
-import { Play, CheckCircle2, Clock, ChevronRight, Trophy } from 'lucide-react';
+import { Play, CheckCircle2, Clock, ChevronRight, Trophy, Activity } from 'lucide-react';
 import { cn } from '../lib/utils';
 import MatchDetailsModal from './MatchDetailsModal';
+import { apiService } from '../services/apiService';
 
 export default function Dashboard() {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
-  const liveMatches = MOCK_MATCHES.filter(m => m.status === 'live');
-  const upcomingMatches = MOCK_MATCHES.filter(m => m.status === 'upcoming');
-  const completedMatches = MOCK_MATCHES.filter(m => m.status === 'completed');
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const getPlayer = (id: number) => MOCK_PLAYERS.find(p => p.id === id);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [fetchedMatches, fetchedPlayers] = await Promise.all([
+          apiService.getMatches(),
+          apiService.getPlayers()
+        ]);
+        setMatches(fetchedMatches);
+        setPlayers(fetchedPlayers);
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const liveMatches = matches.filter(m => m.status === 'live');
+  const upcomingMatches = matches.filter(m => m.status === 'upcoming');
+  const completedMatches = matches.filter(m => m.status === 'completed');
+
+  const getPlayer = (id: number) => players.find(p => p.id === id);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#E4E3E0]">
+        <div className="flex flex-col items-center gap-4">
+          <Activity className="animate-pulse text-[#141414]" size={48} />
+          <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Loading Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 space-y-8 bg-[#E4E3E0] min-h-screen text-[#141414]">
@@ -23,11 +56,11 @@ export default function Dashboard() {
         <div className="flex gap-4">
           <div className="text-right">
             <p className="text-[10px] uppercase tracking-widest opacity-50">Total Players</p>
-            <p className="text-2xl font-mono font-bold">{MOCK_PLAYERS.length}</p>
+            <p className="text-2xl font-mono font-bold">{players.length}</p>
           </div>
           <div className="text-right">
             <p className="text-[10px] uppercase tracking-widest opacity-50">Matches Played</p>
-            <p className="text-2xl font-mono font-bold">{completedMatches.length}/{MOCK_MATCHES.length}</p>
+            <p className="text-2xl font-mono font-bold">{completedMatches.length}/{matches.length}</p>
           </div>
         </div>
       </header>
@@ -44,7 +77,11 @@ export default function Dashboard() {
             const p1 = getPlayer(match.player1Id);
             const p2 = getPlayer(match.player2Id);
             return (
-              <div key={match.id} className="bg-white border border-[#141414] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+              <div 
+                key={match.id} 
+                onClick={() => setSelectedMatch(match)}
+                className="bg-white border border-[#141414] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+              >
                 <div className="p-6 grid grid-cols-7 items-center gap-4">
                   <div className="col-span-3 flex items-center gap-4">
                     <div className="text-right flex-1">
@@ -112,7 +149,7 @@ export default function Dashboard() {
           <section>
             <h3 className="text-sm font-bold uppercase tracking-widest mb-4 opacity-50">Top Performers</h3>
             <div className="space-y-3">
-              {MOCK_PLAYERS.slice(0, 4).map((player, i) => (
+              {players.slice(0, 4).map((player, i) => (
                 <div key={player.id} className="bg-white/50 border border-[#141414]/10 p-4 rounded-xl flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-xs opacity-30">0{i+1}</span>
@@ -134,7 +171,11 @@ export default function Dashboard() {
                 const p1 = getPlayer(match.player1Id);
                 const p2 = getPlayer(match.player2Id);
                 return (
-                  <div key={match.id} className="bg-white border border-[#141414]/10 p-4 rounded-xl flex items-center justify-between group hover:border-[#141414] transition-colors">
+                  <div 
+                    key={match.id} 
+                    onClick={() => setSelectedMatch(match)}
+                    className="bg-white border border-[#141414]/10 p-4 rounded-xl flex items-center justify-between group hover:border-[#141414] transition-colors cursor-pointer"
+                  >
                     <div className="flex-1">
                       <p className="text-xs font-bold">{p1?.name.split(' ').pop()} vs {p2?.name.split(' ').pop()}</p>
                       <p className="text-[10px] opacity-40">Table {match.tableNumber} • 14:00</p>
