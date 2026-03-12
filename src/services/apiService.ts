@@ -63,6 +63,14 @@ export const apiService = {
     return res.json();
   },
 
+  async deleteLastInning(matchId: number): Promise<MatchInning | null> {
+    const res = await fetch(`${API_BASE}/matches/${matchId}/innings/last`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) return null;
+    return res.json();
+  },
+
   async getTournaments(): Promise<Tournament[]> {
     const res = await fetch(`${API_BASE}/tournaments`);
     return res.json();

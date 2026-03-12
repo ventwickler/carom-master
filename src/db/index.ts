@@ -185,6 +185,13 @@ export const dbService = {
       .run(inning.matchId, inning.inningNumber, inning.player1Score, inning.player2Score, inning.player1Run, inning.player2Run);
     return { ...inning, id: info.lastInsertRowid as number };
   },
+  deleteLastInning: (matchId: number) => {
+    const lastInning = db.prepare('SELECT * FROM match_innings WHERE matchId = ? ORDER BY inningNumber DESC LIMIT 1').get(matchId) as MatchInning;
+    if (!lastInning) return null;
+
+    db.prepare('DELETE FROM match_innings WHERE id = ?').run(lastInning.id);
+    return lastInning;
+  },
 
   // Tournaments
   getTournaments: (): Tournament[] => {

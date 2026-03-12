@@ -55,6 +55,16 @@ async function startServer() {
     res.status(201).json(result);
   });
 
+  app.delete("/api/matches/:id/innings/last", (req, res) => {
+    const id = Number(req.params.id);
+    const deletedInning = dbService.deleteLastInning(id);
+    if (deletedInning) {
+      res.json(deletedInning);
+    } else {
+      res.status(404).json({ error: "No innings found" });
+    }
+  });
+
   app.get("/api/tournaments", (req, res) => {
     res.json(dbService.getTournaments());
   });

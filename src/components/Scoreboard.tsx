@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Match, Player, MatchInning } from '../types';
 import { cn } from '../lib/utils';
-import { Timer, Hash, TrendingUp, User, Activity, ArrowLeft, Plus, Check } from 'lucide-react';
+import { Timer, Hash, TrendingUp, User, Activity, ArrowLeft, Plus, Check, Minus, Undo2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { apiService } from '../services/apiService';
 
@@ -25,6 +25,40 @@ export default function Scoreboard({ match: initialMatch, player1, player2, onBa
   const handleAddPoint = () => {
     setCurrentRun(prev => prev + 1);
     setTimeLeft(40); // Reset shot clock
+  };
+
+  const handleRemovePoint = () => {
+    setCurrentRun(prev => Math.max(0, prev - 1));
+  };
+
+  const handleUndoTurn = async () => {
+    if (activePlayer === 2) {
+      // Revert to Player 1's turn
+      setActivePlayer(1);
+      setCurrentRun(p1Run);
+      setP1Run(0);
+    } else if (activePlayer === 1 && match.innings > 0) {
+      // Revert to Player 2's turn of the previous inning
+      try {
+        const deletedInning = await apiService.deleteLastInning(match.id);
+        if (deletedInning) {
+          const updatedMatch: Match = {
+            ...match,
+            player1Score: match.player1Score - deletedInning.player1Run,
+            player2Score: match.player2Score - deletedInning.player2Run,
+            innings: match.innings - 1,
+            status: 'live' // Revert to live if it was completed
+          };
+          await apiService.updateMatch(updatedMatch);
+          setMatch(updatedMatch);
+          setActivePlayer(2);
+          setP1Run(deletedInning.player1Run);
+          setCurrentRun(deletedInning.player2Run);
+        }
+      } catch (error) {
+        console.error('Failed to undo inning:', error);
+      }
+    }
   };
 
   const handleEndTurn = async () => {
@@ -269,13 +303,32 @@ export default function Scoreboard({ match: initialMatch, player1, player2, onBa
 
         {/* Action Buttons */}
         {match.status === 'live' && (
-          <div className="flex justify-center gap-6 mt-8">
+          <div className="flex justify-center gap-4 mt-8">
+            <button 
+              onClick={handleUndoTurn}
+              disabled={activePlayer === 1 && match.innings === 0 && currentRun === 0}
+              className="bg-[#1A1A1A] hover:bg-[#2A2A2A] border border-[#2A2A2A] text-white px-6 py-6 rounded-2xl font-bold flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Undo Last Turn"
+            >
+              <Undo2 size={24} />
+            </button>
+
+            <button 
+              onClick={handleRemovePoint}
+              disabled={currentRun === 0}
+              className="bg-[#1A1A1A] hover:bg-[#2A2A2A] border border-[#2A2A2A] text-white px-8 py-6 rounded-2xl font-bold text-xl flex items-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Remove Point"
+            >
+              <Minus size={24} />
+            </button>
+
             <button 
               onClick={handleAddPoint}
               className="bg-emerald-500 hover:bg-emerald-600 text-white px-12 py-6 rounded-2xl font-bold text-2xl flex items-center gap-3 transition-colors shadow-[0_0_40px_rgba(16,185,129,0.2)]"
             >
               <Plus size={28} /> Point
             </button>
+
             <button 
               onClick={handleEndTurn}
               className="bg-[#1A1A1A] hover:bg-[#2A2A2A] border border-[#2A2A2A] text-white px-12 py-6 rounded-2xl font-bold text-xl flex items-center gap-3 transition-colors"
