@@ -19,8 +19,15 @@ export default function Scoreboard({ match: initialMatch, player1, player2, onBa
   const [timeLeft, setTimeLeft] = useState(40); // 40 seconds per shot
   const [p1Run, setP1Run] = useState(0);
 
-  const avg1 = match.innings > 0 ? (match.player1Score / match.innings).toFixed(3) : '0.000';
-  const avg2 = match.innings > 0 ? (match.player2Score / match.innings).toFixed(3) : '0.000';
+  const displayP1Score = match.player1Score + (activePlayer === 2 ? p1Run : 0);
+  const displayP2Score = match.player2Score;
+
+  const p1Innings = match.innings + (activePlayer === 2 ? 1 : 0);
+  const avg1 = p1Innings > 0 ? (displayP1Score / p1Innings).toFixed(3) : '0.000';
+  const avg2 = match.innings > 0 ? (displayP2Score / match.innings).toFixed(3) : '0.000';
+
+  const displayHighRun1 = Math.max(match.highRun1, activePlayer === 2 ? p1Run : 0);
+  const displayHighRun2 = match.highRun2;
 
   const handleAddPoint = () => {
     setCurrentRun(prev => prev + 1);
@@ -180,13 +187,13 @@ export default function Scoreboard({ match: initialMatch, player1, player2, onBa
               <div className="absolute top-4 left-4 text-[10px] uppercase tracking-widest opacity-20">Score</div>
               <AnimatePresence mode="wait">
                 <motion.span 
-                  key={match.player1Score}
+                  key={displayP1Score}
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -20, opacity: 0 }}
                   className="text-[180px] font-mono font-bold leading-none tracking-tighter text-white block"
                 >
-                  {match.player1Score}
+                  {displayP1Score}
                 </motion.span>
               </AnimatePresence>
               <div className="mt-8 grid grid-cols-2 gap-4">
@@ -196,7 +203,7 @@ export default function Scoreboard({ match: initialMatch, player1, player2, onBa
                 </div>
                 <div className="bg-[#0A0A0A] p-4 rounded-2xl border border-[#2A2A2A]">
                   <p className="text-[10px] uppercase tracking-widest opacity-40 mb-1">High Run</p>
-                  <p className="text-xl font-mono font-bold">{match.highRun1}</p>
+                  <p className="text-xl font-mono font-bold">{displayHighRun1}</p>
                 </div>
               </div>
             </motion.div>
@@ -248,13 +255,13 @@ export default function Scoreboard({ match: initialMatch, player1, player2, onBa
               <div className="absolute top-4 right-4 text-[10px] uppercase tracking-widest opacity-20">Score</div>
               <AnimatePresence mode="wait">
                 <motion.span 
-                  key={match.player2Score}
+                  key={displayP2Score}
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -20, opacity: 0 }}
                   className="text-[180px] font-mono font-bold leading-none tracking-tighter text-white block"
                 >
-                  {match.player2Score}
+                  {displayP2Score}
                 </motion.span>
               </AnimatePresence>
               <div className="mt-8 grid grid-cols-2 gap-4 text-left">
@@ -264,7 +271,7 @@ export default function Scoreboard({ match: initialMatch, player1, player2, onBa
                 </div>
                 <div className="bg-[#0A0A0A] p-4 rounded-2xl border border-[#2A2A2A]">
                   <p className="text-[10px] uppercase tracking-widest opacity-40 mb-1">High Run</p>
-                  <p className="text-xl font-mono font-bold">{match.highRun2}</p>
+                  <p className="text-xl font-mono font-bold">{displayHighRun2}</p>
                 </div>
               </div>
             </motion.div>
@@ -276,7 +283,7 @@ export default function Scoreboard({ match: initialMatch, player1, player2, onBa
           {[
             { label: 'Shot Clock', value: `${timeLeft}s`, icon: Timer, highlight: timeLeft <= 10 },
             { label: 'Current Run', value: currentRun, icon: TrendingUp },
-            { label: 'Total Points', value: match.player1Score + match.player2Score, icon: Hash },
+            { label: 'Total Points', value: displayP1Score + displayP2Score, icon: Hash },
             { label: 'Match Status', value: match.status.toUpperCase(), icon: Activity, live: match.status === 'live' },
           ].map((stat, i) => (
             <div key={i} className={cn(
