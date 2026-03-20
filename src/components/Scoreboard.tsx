@@ -10,9 +10,10 @@ interface ScoreboardProps {
   player1: Player;
   player2: Player;
   onBack?: () => void;
+  isLoggedIn?: boolean;
 }
 
-export default function Scoreboard({ match: initialMatch, player1, player2, onBack }: ScoreboardProps) {
+export default function Scoreboard({ match: initialMatch, player1, player2, onBack, isLoggedIn }: ScoreboardProps) {
   const [match, setMatch] = useState(initialMatch);
   const [currentRun, setCurrentRun] = useState(0);
   const [activePlayer, setActivePlayer] = useState<1 | 2>(1);
@@ -309,7 +310,7 @@ export default function Scoreboard({ match: initialMatch, player1, player2, onBa
         </div>
 
         {/* Action Buttons */}
-        {match.status === 'live' && (
+        {match.status === 'live' && isLoggedIn && (
           <div className="flex justify-center gap-4 mt-8">
             <button 
               onClick={handleUndoTurn}

@@ -1,7 +1,7 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import { dbService } from "./src/db/index";
-import { Player, Match, Tournament } from "./src/types";
+import { Player, Match, Tournament, User } from "./src/types";
 
 async function startServer() {
   const app = express();
@@ -9,18 +9,27 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Simple Auth Middleware
+  const authMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const userId = req.headers["x-user-id"];
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized: Please log in to perform this action" });
+    }
+    next();
+  };
+
   // API Routes
   app.get("/api/players", (req, res) => {
     res.json(dbService.getPlayers());
   });
 
-  app.post("/api/players", (req, res) => {
+  app.post("/api/players", authMiddleware, (req, res) => {
     const newPlayer = req.body as Player;
     const createdPlayer = dbService.createPlayer(newPlayer);
     res.status(201).json(createdPlayer);
   });
 
-  app.put("/api/players/:id", (req, res) => {
+  app.put("/api/players/:id", authMiddleware, (req, res) => {
     const id = Number(req.params.id);
     const updatedPlayer = req.body as Player;
     dbService.updatePlayer(id, updatedPlayer);
@@ -31,13 +40,13 @@ async function startServer() {
     res.json(dbService.getMatches());
   });
 
-  app.post("/api/matches", (req, res) => {
+  app.post("/api/matches", authMiddleware, (req, res) => {
     const newMatch = req.body as Match;
     const createdMatch = dbService.createMatch(newMatch);
     res.status(201).json(createdMatch);
   });
 
-  app.put("/api/matches/:id", (req, res) => {
+  app.put("/api/matches/:id", authMiddleware, (req, res) => {
     const id = Number(req.params.id);
     const updatedMatch = req.body as Match;
     dbService.updateMatch(id, updatedMatch);
@@ -49,7 +58,7 @@ async function startServer() {
     res.json(dbService.getMatchInnings(id));
   });
 
-  app.post("/api/matches/:id/innings", (req, res) => {
+  app.post("/api/matches/:id/innings", authMiddleware, (req, res) => {
     try {
       const newInning = req.body;
       const result = dbService.addMatchInning(newInning);
@@ -60,7 +69,7 @@ async function startServer() {
     }
   });
 
-  app.delete("/api/matches/:id/innings/last", (req, res) => {
+  app.delete("/api/matches/:id/innings/last", authMiddleware, (req, res) => {
     const id = Number(req.params.id);
     const deletedInning = dbService.deleteLastInning(id);
     if (deletedInning) {
@@ -74,17 +83,56 @@ async function startServer() {
     res.json(dbService.getTournaments());
   });
 
-  app.post("/api/tournaments", (req, res) => {
+  app.post("/api/tournaments", authMiddleware, (req, res) => {
     const newTournament = req.body as Tournament;
     const createdTournament = dbService.createTournament(newTournament);
     res.status(201).json(createdTournament);
   });
 
-  app.put("/api/tournaments/:id", (req, res) => {
+  app.put("/api/tournaments/:id", authMiddleware, (req, res) => {
     const id = Number(req.params.id);
     const updatedTournament = req.body as Tournament;
     dbService.updateTournament(id, updatedTournament);
     res.json(updatedTournament);
+  });
+
+  // User Routes
+  app.get("/api/users", (req, res) => {
+    res.json(dbService.getUsers());
+  });
+
+  app.post("/api/users", authMiddleware, (req, res) => {
+    try {
+      const newUser = req.body as User;
+      const createdUser = dbService.createUser(newUser);
+      res.status(201).json(createdUser);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.put("/api/users/:id", authMiddleware, (req, res) => {
+    const id = Number(req.params.id);
+    const updatedUser = req.body as Partial<User>;
+    dbService.updateUser(id, updatedUser);
+    res.json({ message: "User updated successfully" });
+  });
+
+  app.delete("/api/users/:id", authMiddleware, (req, res) => {
+    const id = Number(req.params.id);
+    dbService.deleteUser(id);
+    res.json({ message: "User deleted successfully" });
+  });
+
+  app.post("/api/login", (req, res) => {
+    const { email, password } = req.body;
+    const user = dbService.login(email, password);
+    if (user) {
+      res.json(user);
+    } else {
+      res.status(401).json({ error: "Invalid credentials" });
+    }
   });
 
   // Vite middleware for development

@@ -46,3 +46,11 @@ export type Tournament = {
   targetPoints?: number;
   inningsLimit?: number;
 };
+
+export type User = {
+  id: number;
+  name: string;
+  role: string;
+  email: string;
+  password?: string;
+};

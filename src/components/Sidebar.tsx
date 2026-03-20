@@ -1,6 +1,7 @@
 import React from 'react';
-import { LayoutDashboard, Trophy, Users, Settings, PlayCircle } from 'lucide-react';
+import { LayoutDashboard, Trophy, Users, Settings, PlayCircle, LogIn, LogOut } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { User } from '../types';
 
 type NavItem = {
   id: string;
@@ -19,9 +20,12 @@ const NAV_ITEMS: NavItem[] = [
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  user: User | null;
+  onLoginClick: () => void;
+  onLogout: () => void;
 }
 
-export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+export default function Sidebar({ activeTab, setActiveTab, user, onLoginClick, onLogout }: SidebarProps) {
   return (
     <div className="w-64 bg-[#141414] text-[#E4E3E0] h-screen flex flex-col border-r border-[#2A2A2A]">
       <div className="p-6 border-bottom border-[#2A2A2A]">
@@ -54,15 +58,34 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       </nav>
 
       <div className="p-6 border-t border-[#2A2A2A]">
-        <div className="flex items-center gap-3 p-3 bg-[#1A1A1A] rounded-xl border border-[#2A2A2A]">
-          <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500 font-bold text-xs">
-            JD
+        {user ? (
+          <div className="flex items-center justify-between gap-3 p-3 bg-[#1A1A1A] rounded-xl border border-[#2A2A2A]">
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex-shrink-0 flex items-center justify-center text-emerald-500 font-bold text-xs">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="overflow-hidden">
+                <p className="text-xs font-bold truncate">{user.name}</p>
+                <p className="text-[10px] opacity-40 truncate">{user.role}</p>
+              </div>
+            </div>
+            <button 
+              onClick={onLogout}
+              className="p-1 hover:bg-[#2A2A2A] rounded-lg transition-colors text-[#888] hover:text-[#E4E3E0]"
+              title="Logout"
+            >
+              <LogOut size={16} />
+            </button>
           </div>
-          <div>
-            <p className="text-xs font-bold">John Doe</p>
-            <p className="text-[10px] opacity-40">Tournament Director</p>
-          </div>
-        </div>
+        ) : (
+          <button 
+            onClick={onLoginClick}
+            className="w-full flex items-center justify-center gap-2 p-3 bg-emerald-500 text-[#141414] rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-400 transition-colors"
+          >
+            <LogIn size={16} />
+            Login to Edit
+          </button>
+        )}
       </div>
     </div>
   );

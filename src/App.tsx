@@ -1,15 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Scoreboard from './components/Scoreboard';
 import PlayerList from './components/PlayerList';
 import TournamentView from './components/TournamentView';
 import MatchManagement from './components/MatchManagement';
-import { Match, Player } from './types';
+import LoginModal from './components/LoginModal';
+import { Match, Player, User } from './types';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeScoreboardMatch, setActiveScoreboardMatch] = useState<{match: Match, p1: Player, p2: Player} | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('carom_user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        localStorage.removeItem('carom_user');
+      }
+    }
+  }, []);
+
+  const handleLogin = (newUser: User) => {
+    setUser(newUser);
+    localStorage.setItem('carom_user', JSON.stringify(newUser));
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('carom_user');
+  };
 
   const handleOpenScoreboard = (match: Match, p1: Player, p2: Player) => {
     setActiveScoreboardMatch({ match, p1, p2 });
@@ -21,7 +45,7 @@ export default function App() {
       case 'dashboard':
         return <Dashboard />;
       case 'matches':
-        return <MatchManagement onOpenScoreboard={handleOpenScoreboard} />;
+        return <MatchManagement onOpenScoreboard={handleOpenScoreboard} isLoggedIn={!!user} />;
       case 'scoreboard':
         if (activeScoreboardMatch) {
           return (
@@ -30,14 +54,15 @@ export default function App() {
               player1={activeScoreboardMatch.p1} 
               player2={activeScoreboardMatch.p2} 
               onBack={() => setActiveTab('matches')} 
+              isLoggedIn={!!user}
             />
           );
         }
-        return <MatchManagement onOpenScoreboard={handleOpenScoreboard} />;
+        return <MatchManagement onOpenScoreboard={handleOpenScoreboard} isLoggedIn={!!user} />;
       case 'tournament':
-        return <TournamentView />;
+        return <TournamentView isLoggedIn={!!user} />;
       case 'players':
-        return <PlayerList />;
+        return <PlayerList isLoggedIn={!!user} />;
       case 'settings':
         return (
           <div className="p-8 bg-[#E4E3E0] min-h-screen text-[#141414]">
@@ -70,10 +95,22 @@ export default function App() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        user={user}
+        onLoginClick={() => setIsLoginModalOpen(true)}
+        onLogout={handleLogout}
+      />
       <main className="flex-1 overflow-y-auto bg-[#E4E3E0]">
         {renderContent()}
       </main>
+      {isLoginModalOpen && (
+        <LoginModal 
+          onLogin={handleLogin} 
+          onClose={() => setIsLoginModalOpen(false)} 
+        />
+      )}
     </div>
   );
 }

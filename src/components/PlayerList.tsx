@@ -7,7 +7,11 @@ import { Player, Match } from '../types';
 import { cn } from '../lib/utils';
 import { apiService } from '../services/apiService';
 
-export default function PlayerList() {
+interface PlayerListProps {
+  isLoggedIn?: boolean;
+}
+
+export default function PlayerList({ isLoggedIn }: PlayerListProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -191,13 +195,15 @@ export default function PlayerList() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <button
-            onClick={handleAddPlayer}
-            className="bg-[#141414] text-white px-6 py-3 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-[#2A2A2A] transition-all shadow-lg flex items-center gap-2"
-          >
-            <Plus size={16} />
-            Add Player
-          </button>
+          {isLoggedIn && (
+            <button
+              onClick={handleAddPlayer}
+              className="bg-[#141414] text-white px-6 py-3 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-[#2A2A2A] transition-all shadow-lg flex items-center gap-2"
+            >
+              <Plus size={16} />
+              Add Player
+            </button>
+          )}
           <div className="flex items-center gap-2 bg-white border border-[#141414]/10 rounded-2xl px-2 py-1">
             <button
               onClick={() => exportToCSV('players')}
@@ -276,13 +282,15 @@ export default function PlayerList() {
               </div>
               
               <div className="flex items-center gap-4">
-                <button
-                  onClick={() => setEditingMatch(match)}
-                  className="p-2 rounded-lg bg-[#141414]/5 hover:bg-[#141414]/10 transition-colors"
-                  title="Edit Match"
-                >
-                  <Edit2 size={14} className="opacity-40" />
-                </button>
+                {isLoggedIn && (
+                  <button
+                    onClick={() => setEditingMatch(match)}
+                    className="p-2 rounded-lg bg-[#141414]/5 hover:bg-[#141414]/10 transition-colors"
+                    title="Edit Match"
+                  >
+                    <Edit2 size={14} className="opacity-40" />
+                  </button>
+                )}
                 <div className="text-right">
                   <p className="text-[10px] uppercase tracking-widest opacity-40 font-bold">Table</p>
                   <p className="font-mono font-bold text-xs">{match.tableNumber}</p>
@@ -316,12 +324,14 @@ export default function PlayerList() {
                 {player.country.substring(0, 2).toUpperCase()}
               </div>
               <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => handleEditPlayer(player)}
-                  className="p-2 rounded-lg bg-[#141414]/5 group-hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
-                >
-                  <Edit2 size={14} />
-                </button>
+                {isLoggedIn && (
+                  <button 
+                    onClick={() => handleEditPlayer(player)}
+                    className="p-2 rounded-lg bg-[#141414]/5 group-hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                )}
                 <div className="text-right">
                   <p className="text-[10px] uppercase tracking-widest opacity-40">Rank</p>
                   <p className="font-mono font-bold">#{player.ranking || 'N/A'}</p>
@@ -353,13 +363,15 @@ export default function PlayerList() {
                 <BarChart3 size={14} />
                 Stats
               </button>
-              <button
-                onClick={() => setRecordingPlayer(player)}
-                className="flex-1 py-3 rounded-xl bg-[#141414] text-white group-hover:bg-white group-hover:text-[#141414] flex items-center justify-center gap-2 font-bold uppercase tracking-widest text-[10px] transition-all hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <ClipboardList size={14} />
-                Record
-              </button>
+              {isLoggedIn && (
+                <button
+                  onClick={() => setRecordingPlayer(player)}
+                  className="flex-1 py-3 rounded-xl bg-[#141414] text-white group-hover:bg-white group-hover:text-[#141414] flex items-center justify-center gap-2 font-bold uppercase tracking-widest text-[10px] transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <ClipboardList size={14} />
+                  Record
+                </button>
+              )}
             </div>
           </div>
         ))}

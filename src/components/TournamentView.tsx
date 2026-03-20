@@ -7,7 +7,11 @@ import { MapPin, Calendar, Trophy, Edit2, ChevronLeft, ChevronRight, Play, Activ
 import { cn } from '../lib/utils';
 import { apiService } from '../services/apiService';
 
-export default function TournamentView() {
+interface TournamentViewProps {
+  isLoggedIn?: boolean;
+}
+
+export default function TournamentView({ isLoggedIn }: TournamentViewProps) {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [editingMatch, setEditingMatch] = useState<Match | undefined>(undefined);
   const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
@@ -124,12 +128,14 @@ export default function TournamentView() {
             <h2 className="text-4xl font-bold tracking-tighter uppercase italic font-serif">Tournaments</h2>
             <p className="text-xs tracking-widest opacity-50 uppercase mt-1">Select a tournament to view details</p>
           </div>
-          <button
-            onClick={handleNewTournament}
-            className="bg-[#141414] text-white px-6 py-3 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-[#2A2A2A] transition-all shadow-lg flex items-center gap-2"
-          >
-            New Tournament
-          </button>
+          {isLoggedIn && (
+            <button
+              onClick={handleNewTournament}
+              className="bg-[#141414] text-white px-6 py-3 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-[#2A2A2A] transition-all shadow-lg flex items-center gap-2"
+            >
+              New Tournament
+            </button>
+          )}
         </header>
 
         {/* Filter Bar */}
@@ -238,13 +244,15 @@ export default function TournamentView() {
             <h2 className="text-4xl font-bold tracking-tighter uppercase italic font-serif">
               {currentTournament?.name || 'Tournament Bracket'}
             </h2>
-            <button 
-              onClick={handleEditTournament}
-              className="p-2 rounded-lg bg-[#141414]/5 hover:bg-[#141414]/10 transition-colors"
-              title="Edit Tournament"
-            >
-              <Edit2 size={16} className="opacity-40" />
-            </button>
+            {isLoggedIn && (
+              <button 
+                onClick={handleEditTournament}
+                className="p-2 rounded-lg bg-[#141414]/5 hover:bg-[#141414]/10 transition-colors"
+                title="Edit Tournament"
+              >
+                <Edit2 size={16} className="opacity-40" />
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-4 mt-1">
             <p className="text-xs tracking-widest opacity-50 uppercase">
@@ -262,12 +270,14 @@ export default function TournamentView() {
             )}
           </div>
         </div>
-        <button
-          onClick={handleNewTournament}
-          className="bg-[#141414] text-white px-6 py-3 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-[#2A2A2A] transition-all shadow-lg flex items-center gap-2"
-        >
-          New Tournament
-        </button>
+        {isLoggedIn && (
+          <button
+            onClick={handleNewTournament}
+            className="bg-[#141414] text-white px-6 py-3 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-[#2A2A2A] transition-all shadow-lg flex items-center gap-2"
+          >
+            New Tournament
+          </button>
+        )}
       </header>
 
       {/* Round Navigation (Mobile/Compact) */}

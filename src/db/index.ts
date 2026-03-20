@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { Player, Match, Tournament, MatchInning } from '../types';
+import { Player, Match, Tournament, MatchInning, User } from '../types';
 import { MOCK_PLAYERS, MOCK_MATCHES, MOCK_TOURNAMENTS } from '../mockData';
 import path from 'path';
 
@@ -62,6 +62,14 @@ db.exec(`
     player1Run INTEGER NOT NULL,
     player2Run INTEGER NOT NULL,
     FOREIGN KEY (matchId) REFERENCES matches(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL
   );
 `);
 
@@ -298,5 +306,35 @@ export const dbService = {
     })();
 
     return tournament;
+  },
+
+  // Users
+  getUsers: (): User[] => {
+    return db.prepare('SELECT id, name, role, email FROM users').all() as User[];
+  },
+  createUser: (user: User) => {
+    const info = db.prepare('INSERT INTO users (name, role, email, password) VALUES (?, ?, ?, ?)')
+      .run(user.name, user.role, user.email, user.password);
+    return { ...user, id: info.lastInsertRowid as number, password: undefined };
+  },
+  updateUser: (id: number, user: Partial<User>) => {
+    const fields = [];
+    const values = [];
+    if (user.name) { fields.push('name = ?'); values.push(user.name); }
+    if (user.role) { fields.push('role = ?'); values.push(user.role); }
+    if (user.email) { fields.push('email = ?'); values.push(user.email); }
+    if (user.password) { fields.push('password = ?'); values.push(user.password); }
+    
+    if (fields.length > 0) {
+      values.push(id);
+      db.prepare(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`).run(...values);
+    }
+    return user;
+  },
+  deleteUser: (id: number) => {
+    db.prepare('DELETE FROM users WHERE id = ?').run(id);
+  },
+  login: (email: string, password: string): User | null => {
+    return db.prepare('SELECT id, name, role, email FROM users WHERE email = ? AND password = ?').get(email, password) as User | null;
   }
 };

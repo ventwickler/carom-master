@@ -1,6 +1,24 @@
-import { Player, Match, Tournament, MatchInning } from '../types';
+import { Player, Match, Tournament, MatchInning, User } from '../types';
 
 const API_BASE = '/api';
+
+const getHeaders = () => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  const userStr = localStorage.getItem('carom_user');
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      if (user && user.id) {
+        headers['x-user-id'] = user.id.toString();
+      }
+    } catch (e) {
+      console.error('Failed to parse user from localStorage', e);
+    }
+  }
+  return headers;
+};
 
 export const apiService = {
   async getPlayers(): Promise<Player[]> {
@@ -11,7 +29,7 @@ export const apiService = {
   async createPlayer(player: Player): Promise<Player> {
     const res = await fetch(`${API_BASE}/players`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify(player),
     });
     return res.json();
@@ -20,7 +38,7 @@ export const apiService = {
   async updatePlayer(player: Player): Promise<Player> {
     const res = await fetch(`${API_BASE}/players/${player.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify(player),
     });
     return res.json();
@@ -34,7 +52,7 @@ export const apiService = {
   async recordMatch(match: Match): Promise<Match> {
     const res = await fetch(`${API_BASE}/matches`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify(match),
     });
     return res.json();
@@ -43,7 +61,7 @@ export const apiService = {
   async updateMatch(match: Match): Promise<Match> {
     const res = await fetch(`${API_BASE}/matches/${match.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify(match),
     });
     return res.json();
@@ -57,7 +75,7 @@ export const apiService = {
   async addMatchInning(matchId: number, inning: MatchInning): Promise<MatchInning> {
     const res = await fetch(`${API_BASE}/matches/${matchId}/innings`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify(inning),
     });
     return res.json();
@@ -66,6 +84,7 @@ export const apiService = {
   async deleteLastInning(matchId: number): Promise<MatchInning | null> {
     const res = await fetch(`${API_BASE}/matches/${matchId}/innings/last`, {
       method: 'DELETE',
+      headers: getHeaders(),
     });
     if (!res.ok) return null;
     return res.json();
@@ -79,7 +98,7 @@ export const apiService = {
   async createTournament(tournament: Tournament): Promise<Tournament> {
     const res = await fetch(`${API_BASE}/tournaments`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify(tournament),
     });
     return res.json();
@@ -88,9 +107,19 @@ export const apiService = {
   async updateTournament(tournament: Tournament): Promise<Tournament> {
     const res = await fetch(`${API_BASE}/tournaments/${tournament.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify(tournament),
     });
+    return res.json();
+  },
+  
+  async login(credentials: any): Promise<User> {
+    const res = await fetch(`${API_BASE}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    });
+    if (!res.ok) throw new Error('Login failed');
     return res.json();
   },
 };

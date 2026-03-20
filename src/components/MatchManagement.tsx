@@ -8,9 +8,10 @@ import { cn } from '../lib/utils';
 
 interface MatchManagementProps {
   onOpenScoreboard?: (match: Match, p1: Player, p2: Player) => void;
+  isLoggedIn?: boolean;
 }
 
-export default function MatchManagement({ onOpenScoreboard }: MatchManagementProps) {
+export default function MatchManagement({ onOpenScoreboard, isLoggedIn }: MatchManagementProps) {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [selectedTournamentId, setSelectedTournamentId] = useState<number | 'all'>('all');
   const [matches, setMatches] = useState<Match[]>([]);
@@ -101,15 +102,17 @@ export default function MatchManagement({ onOpenScoreboard }: MatchManagementPro
           <h2 className="text-4xl font-bold tracking-tighter uppercase italic font-serif">Match Management</h2>
           <p className="text-xs tracking-widest opacity-50 uppercase mt-1">Organize and track tournament pairings</p>
         </div>
-        <button
-          onClick={() => {
-            setEditingMatch(undefined);
-            setIsFormOpen(true);
-          }}
-          className="bg-[#141414] text-white px-6 py-3 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-[#2A2A2A] transition-all shadow-lg flex items-center gap-2"
-        >
-          <Plus size={16} /> New Match
-        </button>
+        {isLoggedIn && (
+          <button
+            onClick={() => {
+              setEditingMatch(undefined);
+              setIsFormOpen(true);
+            }}
+            className="bg-[#141414] text-white px-6 py-3 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-[#2A2A2A] transition-all shadow-lg flex items-center gap-2"
+          >
+            <Plus size={16} /> New Match
+          </button>
+        )}
       </header>
 
       {/* Filters */}
@@ -219,15 +222,17 @@ export default function MatchManagement({ onOpenScoreboard }: MatchManagementPro
 
                   {/* Actions */}
                   <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => {
-                        setEditingMatch(match);
-                        setIsFormOpen(true);
-                      }}
-                      className="p-3 rounded-xl border border-[#141414]/10 hover:border-[#141414] hover:bg-[#141414] hover:text-white transition-all"
-                    >
-                      <Edit2 size={16} />
-                    </button>
+                    {isLoggedIn && (
+                      <button 
+                        onClick={() => {
+                          setEditingMatch(match);
+                          setIsFormOpen(true);
+                        }}
+                        className="p-3 rounded-xl border border-[#141414]/10 hover:border-[#141414] hover:bg-[#141414] hover:text-white transition-all"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                    )}
                     {match.status !== 'completed' && (
                       <button 
                         onClick={() => {
