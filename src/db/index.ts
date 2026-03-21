@@ -87,6 +87,10 @@ if (playerCount.count === 0) {
       insertPlayer.run(player.id, player.name, player.country, player.ranking || null, player.avatar || null);
     }
 
+    // Seed default admin user
+    const insertUser = db.prepare('INSERT INTO users (name, role, email, password) VALUES (?, ?, ?, ?)');
+    insertUser.run('Admin', 'admin', 'vEntwickler@gmail.com', 'admin123');
+
     for (const tournament of MOCK_TOURNAMENTS) {
       insertTournament.run(
         tournament.id,
