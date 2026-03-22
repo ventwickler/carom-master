@@ -1,5 +1,5 @@
 # Stage 1: Build the frontend
-FROM node:25-bullseye-slim AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -7,7 +7,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Production environment
-FROM node:25-bullseye-slim
+FROM node:22-slim
 WORKDIR /app
 
 # Install production dependencies only
