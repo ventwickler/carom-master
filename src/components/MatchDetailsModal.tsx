@@ -125,6 +125,12 @@ export default function MatchDetailsModal({ match, player1, player2, onClose, on
                   <div className="text-[10px] uppercase tracking-widest opacity-40">Target Points</div>
                   <div className="font-mono font-bold text-sm">{match.targetPoints}</div>
                 </div>
+                {match.inningsLimit && match.inningsLimit > 0 && (
+                  <div className="flex justify-between items-center">
+                    <div className="text-[10px] uppercase tracking-widest opacity-40">Innings Limit</div>
+                    <div className="font-mono font-bold text-sm">{match.inningsLimit}</div>
+                  </div>
+                )}
               </div>
             </div>
 

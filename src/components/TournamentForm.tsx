@@ -1,24 +1,25 @@
 import React, { useState } from 'react';
 import { X, Calendar, MapPin, Trophy, LayoutGrid, Users, Target, Clock } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Tournament, Player } from '../types';
+import { Tournament, Player, AppSettings } from '../types';
 
 interface TournamentFormProps {
   tournament?: Tournament | null;
   availablePlayers: Player[];
+  settings: AppSettings;
   onClose: () => void;
   onSubmit: (data: Partial<Tournament>) => void;
 }
 
-export default function TournamentForm({ tournament, availablePlayers, onClose, onSubmit }: TournamentFormProps) {
+export default function TournamentForm({ tournament, availablePlayers, settings, onClose, onSubmit }: TournamentFormProps) {
   const [formData, setFormData] = useState({
     name: tournament?.name || '',
     location: tournament?.location || '',
     type: tournament?.type || 'knockout' as const,
     startDate: tournament?.startDate || new Date().toISOString().split('T')[0],
     endDate: tournament?.endDate || new Date().toISOString().split('T')[0],
-    targetPoints: tournament?.targetPoints || 40,
-    inningsLimit: tournament?.inningsLimit || 0,
+    targetPoints: tournament?.targetPoints || settings.targetPoints,
+    inningsLimit: tournament?.inningsLimit || settings.inningsLimit,
     selectedPlayerIds: tournament?.players.map(p => p.id) || [] as number[],
   });
 

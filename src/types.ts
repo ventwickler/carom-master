@@ -30,6 +30,7 @@ export type Match = {
   startTime: string;
   tableNumber: number;
   targetPoints: number;
+  inningsLimit?: number;
   highRun1: number;
   highRun2: number;
 };
@@ -53,4 +54,11 @@ export type User = {
   role: string;
   email: string;
   password?: string;
+};
+
+export type AppSettings = {
+  targetPoints: number;
+  timeLimit: number;
+  equalizingInnings: boolean;
+  inningsLimit: number;
 };

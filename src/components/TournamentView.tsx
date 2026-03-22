@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import MatchDetailsModal from './MatchDetailsModal';
 import TournamentForm from './TournamentForm';
 import MatchRecordForm from './MatchRecordForm';
-import { Match, Tournament, Player } from '../types';
+import { Match, Tournament, Player, AppSettings } from '../types';
 import { MapPin, Calendar, Trophy, Edit2, ChevronLeft, ChevronRight, Play, Activity, Search, Filter } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { apiService } from '../services/apiService';
 
 interface TournamentViewProps {
   isLoggedIn?: boolean;
+  settings: AppSettings;
 }
 
-export default function TournamentView({ isLoggedIn }: TournamentViewProps) {
+export default function TournamentView({ isLoggedIn, settings }: TournamentViewProps) {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [editingMatch, setEditingMatch] = useState<Match | undefined>(undefined);
   const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
@@ -219,6 +220,7 @@ export default function TournamentView({ isLoggedIn }: TournamentViewProps) {
           <TournamentForm 
             tournament={editingTournament}
             availablePlayers={allPlayers}
+            settings={settings}
             onClose={() => {
               setIsFormOpen(false);
               setEditingTournament(null);
@@ -467,6 +469,7 @@ export default function TournamentView({ isLoggedIn }: TournamentViewProps) {
           match={editingMatch}
           allPlayers={allPlayers}
           allTournaments={tournaments}
+          settings={settings}
           onClose={() => setEditingMatch(undefined)}
           onSubmit={handleMatchUpdate}
         />
@@ -476,6 +479,7 @@ export default function TournamentView({ isLoggedIn }: TournamentViewProps) {
         <TournamentForm 
           tournament={editingTournament}
           availablePlayers={allPlayers}
+          settings={settings}
           onClose={() => {
             setIsFormOpen(false);
             setEditingTournament(null);

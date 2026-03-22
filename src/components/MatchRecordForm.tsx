@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { X, Trophy, Hash, Users, Calendar } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Player, Match, Tournament } from '../types';
+import { Player, Match, Tournament, AppSettings } from '../types';
 
 interface MatchRecordFormProps {
   player?: Player;
   match?: Match;
   allPlayers: Player[];
   allTournaments?: Tournament[];
+  settings: AppSettings;
   onClose: () => void;
   onSubmit: (match: Match) => void;
 }
 
-export default function MatchRecordForm({ player: initialPlayer, match, allPlayers, allTournaments = [], onClose, onSubmit }: MatchRecordFormProps) {
+export default function MatchRecordForm({ player: initialPlayer, match, allPlayers, allTournaments = [], settings, onClose, onSubmit }: MatchRecordFormProps) {
   const [formData, setFormData] = useState({
     player1Id: match?.player1Id || initialPlayer?.id || '',
     player2Id: match?.player2Id || '',
@@ -22,10 +23,21 @@ export default function MatchRecordForm({ player: initialPlayer, match, allPlaye
     innings: match?.innings || 0,
     highRun: match?.highRun1 || 0,
     opponentHighRun: match?.highRun2 || 0,
-    targetPoints: match?.targetPoints || 40,
+    targetPoints: match?.targetPoints || settings.targetPoints,
+    inningsLimit: match?.inningsLimit || settings.inningsLimit,
     tableNumber: match?.tableNumber || 1,
     status: match?.status || 'completed' as Match['status'],
   });
+
+  const handleTournamentChange = (tournamentId: string) => {
+    const tournament = allTournaments.find(t => t.id === Number(tournamentId));
+    setFormData(prev => ({
+      ...prev,
+      tournamentId,
+      targetPoints: tournament?.targetPoints || prev.targetPoints,
+      inningsLimit: tournament?.inningsLimit || prev.inningsLimit,
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +55,7 @@ export default function MatchRecordForm({ player: initialPlayer, match, allPlaye
       startTime: match?.startTime || new Date().toISOString(),
       tableNumber: formData.tableNumber,
       targetPoints: formData.targetPoints,
+      inningsLimit: formData.inningsLimit,
       highRun1: formData.highRun,
       highRun2: formData.opponentHighRun,
     };
@@ -80,7 +93,7 @@ export default function MatchRecordForm({ player: initialPlayer, match, allPlaye
             <select
               className="w-full bg-white border border-[#141414]/10 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-[#141414] outline-none transition-all appearance-none font-bold"
               value={formData.tournamentId}
-              onChange={(e) => setFormData({ ...formData, tournamentId: e.target.value })}
+              onChange={(e) => handleTournamentChange(e.target.value)}
             >
               <option value="">Exhibition Match (No Tournament)</option>
               {allTournaments.map(t => (
@@ -192,7 +205,17 @@ export default function MatchRecordForm({ player: initialPlayer, match, allPlaye
                 type="number"
                 className="w-full bg-white border border-[#141414]/10 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-[#141414] outline-none transition-all font-mono"
                 value={formData.targetPoints}
-                onChange={(e) => setFormData({ ...formData, targetPoints: parseInt(e.target.value) || 40 })}
+                onChange={(e) => setFormData({ ...formData, targetPoints: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-widest font-bold opacity-50">Inn. Limit</label>
+              <input
+                type="number"
+                className="w-full bg-white border border-[#141414]/10 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-[#141414] outline-none transition-all font-mono"
+                value={formData.inningsLimit || ''}
+                placeholder="None"
+                onChange={(e) => setFormData({ ...formData, inningsLimit: parseInt(e.target.value) || 0 })}
               />
             </div>
             <div className="space-y-1.5">

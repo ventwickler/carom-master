@@ -3,15 +3,16 @@ import { Trophy, Award, Target, Globe, Plus, Edit2, Search, ArrowUpDown, BarChar
 import PlayerForm from './PlayerForm';
 import PlayerStatsModal from './PlayerStatsModal';
 import MatchRecordForm from './MatchRecordForm';
-import { Player, Match } from '../types';
+import { Player, Match, AppSettings } from '../types';
 import { cn } from '../lib/utils';
 import { apiService } from '../services/apiService';
 
 interface PlayerListProps {
   isLoggedIn?: boolean;
+  settings: AppSettings;
 }
 
-export default function PlayerList({ isLoggedIn }: PlayerListProps) {
+export default function PlayerList({ isLoggedIn, settings }: PlayerListProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -396,6 +397,7 @@ export default function PlayerList({ isLoggedIn }: PlayerListProps) {
         <MatchRecordForm
           player={recordingPlayer}
           allPlayers={players}
+          settings={settings}
           onClose={() => setRecordingPlayer(undefined)}
           onSubmit={handleMatchSubmit}
         />
@@ -405,6 +407,7 @@ export default function PlayerList({ isLoggedIn }: PlayerListProps) {
         <MatchRecordForm
           match={editingMatch}
           allPlayers={players}
+          settings={settings}
           onClose={() => setEditingMatch(undefined)}
           onSubmit={handleMatchSubmit}
         />

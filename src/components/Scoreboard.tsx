@@ -17,22 +17,25 @@ export default function Scoreboard({ match: initialMatch, player1, player2, onBa
   const [match, setMatch] = useState(initialMatch);
   const [currentRun, setCurrentRun] = useState(0);
   const [activePlayer, setActivePlayer] = useState<1 | 2>(1);
-  const [timeLeft, setTimeLeft] = useState(40); // 40 seconds per shot
+  const [timeLeft, setTimeLeft] = useState(40);
   const [p1Run, setP1Run] = useState(0);
 
-  const displayP1Score = match.player1Score + (activePlayer === 2 ? p1Run : 0);
-  const displayP2Score = match.player2Score;
+  const displayP1Score = match.player1Score + (activePlayer === 1 ? currentRun : 0);
+  const displayP2Score = match.player2Score + (activePlayer === 2 ? currentRun : 0);
 
-  const p1Innings = match.innings + (activePlayer === 2 ? 1 : 0);
-  const avg1 = p1Innings > 0 ? (displayP1Score / p1Innings).toFixed(3) : '0.000';
-  const avg2 = match.innings > 0 ? (displayP2Score / match.innings).toFixed(3) : '0.000';
+  const effectiveInnings = match.status === 'completed' ? match.innings : match.innings + 1;
+  const avg1 = effectiveInnings > 0 ? (displayP1Score / effectiveInnings).toFixed(3) : '0.000';
+  const avg2 = effectiveInnings > 0 ? (displayP2Score / effectiveInnings).toFixed(3) : '0.000';
 
-  const displayHighRun1 = Math.max(match.highRun1, activePlayer === 2 ? p1Run : 0);
-  const displayHighRun2 = match.highRun2;
+  const displayHighRun1 = Math.max(match.highRun1, activePlayer === 1 ? currentRun : p1Run);
+  const displayHighRun2 = Math.max(match.highRun2, activePlayer === 2 ? currentRun : 0);
 
   const handleAddPoint = () => {
+    const currentTotal = (activePlayer === 1 ? match.player1Score : match.player2Score) + currentRun;
+    if (currentTotal >= match.targetPoints) return;
+    
     setCurrentRun(prev => prev + 1);
-    setTimeLeft(40); // Reset shot clock
+    setTimeLeft(40);
   };
 
   const handleRemovePoint = () => {
@@ -71,24 +74,41 @@ export default function Scoreboard({ match: initialMatch, player1, player2, onBa
 
   const handleEndTurn = async () => {
     if (activePlayer === 1) {
-      // Player 1 finished their turn, save run and switch to player 2
-      setP1Run(currentRun);
-      setActivePlayer(2);
-      setCurrentRun(0);
-      setTimeLeft(40);
+      // Player 1 finished their turn
+      const newP1Score = match.player1Score + currentRun;
+      const newHighRun1 = Math.max(match.highRun1, currentRun);
+      
+      const updatedMatch: Match = {
+        ...match,
+        player1Score: newP1Score,
+        highRun1: newHighRun1,
+        // Status remains 'live' for Player 2's equalizing inning
+      };
+
+      try {
+        await apiService.updateMatch(updatedMatch);
+        setMatch(updatedMatch);
+        setP1Run(currentRun);
+        setActivePlayer(2);
+        setCurrentRun(0);
+        setTimeLeft(40);
+      } catch (error) {
+        console.error('Failed to save player 1 turn:', error);
+      }
     } else {
       // Player 2 finished their turn, inning is complete
       const p2Run = currentRun;
       const newInningNumber = match.innings + 1;
-      const newP1Score = match.player1Score + p1Run;
       const newP2Score = match.player2Score + p2Run;
-      const newHighRun1 = Math.max(match.highRun1, p1Run);
       const newHighRun2 = Math.max(match.highRun2, p2Run);
+
+      const isTargetReached = match.player1Score >= match.targetPoints || newP2Score >= match.targetPoints;
+      const isInningsLimitReached = match.inningsLimit && match.inningsLimit > 0 && newInningNumber >= match.inningsLimit;
 
       const inning: MatchInning = {
         matchId: match.id,
         inningNumber: newInningNumber,
-        player1Score: newP1Score,
+        player1Score: match.player1Score,
         player2Score: newP2Score,
         player1Run: p1Run,
         player2Run: p2Run
@@ -96,12 +116,10 @@ export default function Scoreboard({ match: initialMatch, player1, player2, onBa
 
       const updatedMatch: Match = {
         ...match,
-        player1Score: newP1Score,
         player2Score: newP2Score,
         innings: newInningNumber,
-        highRun1: newHighRun1,
         highRun2: newHighRun2,
-        status: (newP1Score >= match.targetPoints || newP2Score >= match.targetPoints) ? 'completed' : 'live'
+        status: (isTargetReached || isInningsLimitReached) ? 'completed' : 'live'
       };
 
       try {
@@ -142,7 +160,12 @@ export default function Scoreboard({ match: initialMatch, player1, player2, onBa
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-widest opacity-40 mb-1">Innings</p>
-              <p className="text-2xl font-mono font-bold">{match.innings}</p>
+              <p className="text-2xl font-mono font-bold">
+                {effectiveInnings}
+                {match.inningsLimit && match.inningsLimit > 0 && (
+                  <span className="text-xs opacity-30 ml-1">/ {match.inningsLimit}</span>
+                )}
+              </p>
             </div>
           </div>
         </div>
@@ -332,7 +355,11 @@ export default function Scoreboard({ match: initialMatch, player1, player2, onBa
 
             <button 
               onClick={handleAddPoint}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-12 py-6 rounded-2xl font-bold text-2xl flex items-center gap-3 transition-colors shadow-[0_0_40px_rgba(16,185,129,0.2)]"
+              disabled={
+                (activePlayer === 1 && displayP1Score >= match.targetPoints) ||
+                (activePlayer === 2 && displayP2Score >= match.targetPoints)
+              }
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-12 py-6 rounded-2xl font-bold text-2xl flex items-center gap-3 transition-colors shadow-[0_0_40px_rgba(16,185,129,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus size={28} /> Point
             </button>

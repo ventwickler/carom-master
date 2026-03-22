@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
-import { Match, Tournament, Player } from '../types';
+import { Match, Tournament, Player, AppSettings } from '../types';
 import { Trophy, Calendar, MapPin, Play, CheckCircle, Clock, Search, Filter, Plus, Edit2, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import MatchRecordForm from './MatchRecordForm';
@@ -9,9 +9,10 @@ import { cn } from '../lib/utils';
 interface MatchManagementProps {
   onOpenScoreboard?: (match: Match, p1: Player, p2: Player) => void;
   isLoggedIn?: boolean;
+  settings: AppSettings;
 }
 
-export default function MatchManagement({ onOpenScoreboard, isLoggedIn }: MatchManagementProps) {
+export default function MatchManagement({ onOpenScoreboard, isLoggedIn, settings }: MatchManagementProps) {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [selectedTournamentId, setSelectedTournamentId] = useState<number | 'all'>('all');
   const [matches, setMatches] = useState<Match[]>([]);
@@ -277,6 +278,7 @@ export default function MatchManagement({ onOpenScoreboard, isLoggedIn }: MatchM
           match={editingMatch}
           allPlayers={players}
           allTournaments={tournaments}
+          settings={settings}
           onClose={() => {
             setIsFormOpen(false);
             setEditingMatch(undefined);

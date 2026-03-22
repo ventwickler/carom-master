@@ -38,6 +38,7 @@ db.exec(`
     startTime TEXT NOT NULL,
     tableNumber INTEGER,
     targetPoints INTEGER,
+    inningsLimit INTEGER,
     highRun1 INTEGER DEFAULT 0,
     highRun2 INTEGER DEFAULT 0,
     FOREIGN KEY (tournamentId) REFERENCES tournaments(id),
@@ -85,7 +86,7 @@ if (userCount.count === 0) {
 if (playerCount.count === 0 && process.env.SEED_MOCK_DATA !== 'false') {
   const insertPlayer = db.prepare('INSERT INTO players (id, name, country, ranking, avatar) VALUES (?, ?, ?, ?, ?)');
   const insertTournament = db.prepare('INSERT INTO tournaments (id, name, location, type, startDate, endDate, targetPoints, inningsLimit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-  const insertMatch = db.prepare('INSERT INTO matches (id, tournamentId, player1Id, player2Id, player1Score, player2Score, innings, status, startTime, tableNumber, targetPoints, highRun1, highRun2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  const insertMatch = db.prepare('INSERT INTO matches (id, tournamentId, player1Id, player2Id, player1Score, player2Score, innings, status, startTime, tableNumber, targetPoints, inningsLimit, highRun1, highRun2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
   const insertTournamentPlayer = db.prepare('INSERT INTO tournament_players (tournamentId, playerId) VALUES (?, ?)');
   const insertInning = db.prepare('INSERT INTO match_innings (matchId, inningNumber, player1Score, player2Score, player1Run, player2Run) VALUES (?, ?, ?, ?, ?, ?)');
 
@@ -126,6 +127,7 @@ if (playerCount.count === 0 && process.env.SEED_MOCK_DATA !== 'false') {
         match.startTime,
         match.tableNumber,
         match.targetPoints,
+        match.inningsLimit || null,
         match.highRun1,
         match.highRun2
       );
@@ -181,8 +183,8 @@ export const dbService = {
     return db.prepare('SELECT * FROM matches').all() as Match[];
   },
   createMatch: (match: Match) => {
-    const info = db.prepare('INSERT INTO matches (tournamentId, player1Id, player2Id, player1Score, player2Score, innings, status, startTime, tableNumber, targetPoints, highRun1, highRun2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .run(match.tournamentId || null, match.player1Id, match.player2Id, match.player1Score, match.player2Score, match.innings, match.status, match.startTime, match.tableNumber, match.targetPoints, match.highRun1, match.highRun2);
+    const info = db.prepare('INSERT INTO matches (tournamentId, player1Id, player2Id, player1Score, player2Score, innings, status, startTime, tableNumber, targetPoints, inningsLimit, highRun1, highRun2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(match.tournamentId || null, match.player1Id, match.player2Id, match.player1Score, match.player2Score, match.innings, match.status, match.startTime, match.tableNumber, match.targetPoints, match.inningsLimit || null, match.highRun1, match.highRun2);
     const newMatch = { ...match, id: info.lastInsertRowid as number };
     
     // Generate mock innings if completed and has innings
@@ -193,8 +195,8 @@ export const dbService = {
     return newMatch;
   },
   updateMatch: (id: number, match: Match) => {
-    db.prepare('UPDATE matches SET player1Score = ?, player2Score = ?, innings = ?, status = ?, highRun1 = ?, highRun2 = ? WHERE id = ?')
-      .run(match.player1Score, match.player2Score, match.innings, match.status, match.highRun1, match.highRun2, id);
+    db.prepare('UPDATE matches SET player1Score = ?, player2Score = ?, innings = ?, status = ?, highRun1 = ?, highRun2 = ?, inningsLimit = ? WHERE id = ?')
+      .run(match.player1Score, match.player2Score, match.innings, match.status, match.highRun1, match.highRun2, match.inningsLimit || null, id);
     
     const updatedMatch = { ...match, id };
     if (updatedMatch.status === 'completed' && updatedMatch.innings > 0) {
