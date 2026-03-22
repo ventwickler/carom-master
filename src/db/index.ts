@@ -75,7 +75,14 @@ db.exec(`
 
 // Seed data if empty
 const playerCount = db.prepare('SELECT count(*) as count FROM players').get() as { count: number };
-if (playerCount.count === 0) {
+const userCount = db.prepare('SELECT count(*) as count FROM users').get() as { count: number };
+
+if (userCount.count === 0) {
+  const insertUser = db.prepare('INSERT INTO users (name, role, email, password) VALUES (?, ?, ?, ?)');
+  insertUser.run('Admin', 'admin', 'vEntwickler@gmail.com', 'admin123');
+}
+
+if (playerCount.count === 0 && process.env.SEED_MOCK_DATA !== 'false') {
   const insertPlayer = db.prepare('INSERT INTO players (id, name, country, ranking, avatar) VALUES (?, ?, ?, ?, ?)');
   const insertTournament = db.prepare('INSERT INTO tournaments (id, name, location, type, startDate, endDate, targetPoints, inningsLimit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
   const insertMatch = db.prepare('INSERT INTO matches (id, tournamentId, player1Id, player2Id, player1Score, player2Score, innings, status, startTime, tableNumber, targetPoints, highRun1, highRun2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
@@ -86,10 +93,6 @@ if (playerCount.count === 0) {
     for (const player of MOCK_PLAYERS) {
       insertPlayer.run(player.id, player.name, player.country, player.ranking || null, player.avatar || null);
     }
-
-    // Seed default admin user
-    const insertUser = db.prepare('INSERT INTO users (name, role, email, password) VALUES (?, ?, ?, ?)');
-    insertUser.run('Admin', 'admin', 'vEntwickler@gmail.com', 'admin123');
 
     for (const tournament of MOCK_TOURNAMENTS) {
       insertTournament.run(
